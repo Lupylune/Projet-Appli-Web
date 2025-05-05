@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscriptions aux événements</title>
+    <style>
+        table, th, td {
+            border: 1px solid #444;
+            border-collapse: collapse;
+            padding: 8px;
+        }
+        th {
+            background-color: #ddd;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+        select, button {
+            padding: 5px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+<h1>📋 Inscriptions aux événements</h1>
+
+<form id="formInscription">
+    <label>Membre :
+        <select id="membreSelect" required></select>
+    </label><br>
+    <label>Événement :
+        <select id="evenementSelect" required></select>
+    </label><br>
+    <button type="submit">Inscrire</button>
+</form>
+
+<h2>👥 Inscriptions existantes</h2>
+<table id="inscriptionsTable">
+    <thead>
+    <tr>
+        <th>Membre</th>
+        <th>Événement</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+    async function chargerSelects() {
+        const membres = await (await fetch('/api/membres')).json();
+        const evenements = await (await fetch('/api/evenements')).json();
+
+        const membreSelect = document.getElementById('membreSelect');
+        const evenementSelect = document.getElementById('evenementSelect');
+
+        membreSelect.innerHTML = membres.map(m =>
+            `<option value="${m.id}">${m.prenom} ${m.nom}</option>`).join('');
+
+        evenementSelect.innerHTML = evenements.map(e =>
+            `<option value="${e.id}">${e.titre}</option>`).join('');
+    }
+
+    async function chargerInscriptions() {
+        const inscriptions = await (await fetch('/api/inscriptions')).json();
+        const tbody = document.querySelector('#inscriptionsTable tbody');
+        tbody.innerHTML = '';
+
+        inscriptions.forEach(ins => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                    <td>${ins.membre.prenom} ${ins.membre.nom}</td>
+                    <td>${ins.evenement.titre}</td>
+                    <td><button onclick="supprimerInscription(${ins.id})">Supprimer</button></td>
+                `;
+            tbody.appendChild(row);
+        });
+    }
+
+    async function supprimerInscription(id) {
+        if (confirm("Supprimer cette inscription ?")) {
+            await fetch(`/api/inscriptions/${id}`, { method: 'DELETE' });
+            await chargerInscriptions();
+        }
+    }
+
+    document.getElementById('formInscription').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const membreId = document.getElementById('membreSelect').value;
+        const evenementId = document.getElementById('evenementSelect').value;
+
+        await fetch(`/api/inscriptions?membreId=${membreId}&evenementId=${evenementId}`, {
+            method: 'POST'
+        });
+
+        await chargerInscriptions();
+    });
+
+    // Init
+    chargerSelects();
+    chargerInscriptions();
+</script>
+</body>
+</html>

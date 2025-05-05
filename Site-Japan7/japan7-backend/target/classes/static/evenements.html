@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Événements</title>
+    <style>
+        table, th, td {
+            border: 1px solid #444;
+            border-collapse: collapse;
+            padding: 8px;
+        }
+        th {
+            background-color: #ddd;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+<h1>📅 Liste des Événements</h1>
+
+<table id="evenementsTable">
+    <thead>
+    <tr>
+        <th>Titre</th>
+        <th>Description</th>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<h2>➕ Ajouter un événement</h2>
+<form id="formAjout">
+    <label>Titre : <input type="text" id="titre" required></label><br>
+    <label>Description : <input type="text" id="description" required></label><br>
+    <label>Date : <input type="datetime-local" id="date" required></label><br>
+    <label>Type : <input type="text" id="type" required></label><br>
+    <button type="submit">Ajouter</button>
+</form>
+
+<script>
+    async function chargerEvenements() {
+        const response = await fetch('/api/evenements');
+        const data = await response.json();
+
+        const tbody = document.querySelector('#evenementsTable tbody');
+        tbody.innerHTML = '';
+
+        data.forEach(evt => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+        <td>${evt.titre}</td>
+        <td>${evt.description}</td>
+        <td>${evt.date}</td>
+        <td>${evt.typeActivite}</td>
+        <td>
+            <button onclick="remplirFormulaire(${evt.id}, '${evt.titre}', '${evt.description}', '${evt.date}', '${evt.typeActivite}')">Modifier</button>
+            <button onclick="supprimerEvenement(${evt.id})">Supprimer</button>
+        </td>
+    `;
+            tbody.appendChild(row);
+        });
+
+    }
+
+    async function supprimerEvenement(id) {
+        if (confirm("Confirmer la suppression ?")) {
+            await fetch(`/api/evenements/${id}`, { method: 'DELETE' });
+            await chargerEvenements(); // Recharge après suppression
+        }
+    }
+
+    let idModification = null;
+
+    function remplirFormulaire(id, titre, description, date, type) {
+        document.getElementById('titre').value = titre;
+        document.getElementById('description').value = description;
+        document.getElementById('date').value = date.substring(0, 16); // tronque les secondes
+        document.getElementById('type').value = type;
+        idModification = id;
+    }
+
+
+    document.getElementById('formAjout').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const evenement = {
+            titre: document.getElementById('titre').value,
+            description: document.getElementById('description').value,
+            date: document.getElementById('date').value,
+            typeActivite: document.getElementById('type').value
+        };
+
+        if (idModification) {
+            // 🔁 Modification
+            await fetch(`/api/evenements/${idModification}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(evenement)
+            });
+            idModification = null;
+        } else {
+            // ➕ Ajout
+            await fetch('/api/evenements', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(evenement)
+            });
+        }
+
+        e.target.reset();
+        await chargerEvenements();
+    });
+
+
+    chargerEvenements();
+</script>
+</body>
+</html>
