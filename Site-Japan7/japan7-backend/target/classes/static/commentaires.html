@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Commentaires et avis</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <img src="images/japan7.jpeg" alt="Logo Japan7" class="logo">
+</header>
+
+<h1>Commentaires et avis</h1>
+
+<form id="commentaireForm">
+    <input type="hidden" id="commentaireId">
+
+    <label for="auteur">Auteur :</label>
+    <input type="text" id="auteur" required>
+
+    <label for="contenu">Contenu :</label>
+    <textarea id="contenu" required></textarea>
+
+    <label for="evenement">Événement :</label>
+    <select id="evenement" required></select>
+
+    <button type="submit" class="button">Enregistrer</button>
+</form>
+
+<table>
+    <thead>
+    <tr>
+        <th>Auteur</th>
+        <th>Contenu</th>
+        <th>Date</th>
+        <th>Événement</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody id="listeCommentaires">
+    </tbody>
+</table>
+
+<script>
+    const commentaireForm = document.getElementById('commentaireForm');
+    const listeCommentaires = document.getElementById('listeCommentaires');
+    const evenementSelect = document.getElementById('evenement');
+
+    async function chargerEvenements() {
+        const res = await fetch('/api/evenements');
+        const evenements = await res.json();
+        evenements.forEach(e => {
+            const option = document.createElement('option');
+            option.value = e.id;
+            option.textContent = e.titre;
+            evenementSelect.appendChild(option);
+        });
+    }
+
+    async function chargerCommentaires() {
+        const res = await fetch('/api/commentaires');
+        const commentaires = await res.json();
+        listeCommentaires.innerHTML = '';
+        commentaires.forEach(c => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${c.auteur}</td>
+                <td>${c.contenu}</td>
+                <td>${c.date ? c.date.replace('T', ' ').substring(0, 16) : ''}</td>
+                <td>${c.evenement?.titre || ''}</td>
+                <td>
+                    <button class="button" onclick="modifierCommentaire(${c.id}, '${c.auteur}', '${c.contenu}', ${c.evenement.id})">Modifier</button>
+                    <button class="button" onclick="supprimerCommentaire(${c.id})">Supprimer</button>
+                </td>
+            `;
+            listeCommentaires.appendChild(tr);
+        });
+    }
+
+    commentaireForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('commentaireId').value;
+        const auteur = document.getElementById('auteur').value;
+        const contenu = document.getElementById('contenu').value;
+        const evenementId = document.getElementById('evenement').value;
+
+        const commentaire = { auteur, contenu, evenement: { id: evenementId } };
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/commentaires/${id}` : '/api/commentaires';
+
+        await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(commentaire)
+        });
+
+        commentaireForm.reset();
+        chargerCommentaires();
+    });
+
+    function modifierCommentaire(id, auteur, contenu, evenementId) {
+        document.getElementById('commentaireId').value = id;
+        document.getElementById('auteur').value = auteur;
+        document.getElementById('contenu').value = contenu;
+        document.getElementById('evenement').value = evenementId;
+    }
+
+    async function supprimerCommentaire(id) {
+        await fetch(`/api/commentaires/${id}`, { method: 'DELETE' });
+        chargerCommentaires();
+    }
+
+    chargerEvenements();
+    chargerCommentaires();
+</script>
+
+</body>
+</html>
