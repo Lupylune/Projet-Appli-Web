@@ -1,7 +1,5 @@
 package com.japan7.japan7_backend;
 
-import com.japan7.japan7_backend.model.EvenementTest;
-import com.japan7.japan7_backend.repository.EvenementTestRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,19 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 @EntityScan("com.japan7.japan7_backend.model")
 @EnableJpaRepositories("com.japan7.japan7_backend.repository")
 public class Japan7BackendApplication {
-
-	@Bean
-	public CommandLineRunner testEvenement(EvenementTestRepository repo) {
-		return args -> {
-			repo.save(new EvenementTest(
-					"Projo Anime",
-					"Projection de Re:Zero",
-					LocalDateTime.now().plusDays(3),
-					"Projection"
-			));
-			System.out.println("Événement test inséré !");
-		};
-	}
 
 	@RestController
 	@RequestMapping("/")
