@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des ressources</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <img src="images/japan7.jpeg" alt="Logo Japan7" class="logo">
+</header>
+
+<h1>📦 Gestion des ressources</h1>
+
+<form id="ressourceForm">
+    <input type="hidden" id="ressourceId">
+
+    <label for="nom">Nom :</label>
+    <input type="text" id="nom" required>
+
+    <label for="quantite">Quantité :</label>
+    <input type="number" id="quantite" required>
+
+    <label for="evenementSelect">Événement :</label>
+    <select id="evenementSelect" required></select>
+
+    <button type="submit" class="button">Ajouter / Modifier</button>
+</form>
+
+<table>
+    <thead>
+    <tr>
+        <th>Nom</th>
+        <th>Quantité</th>
+        <th>Événement</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody id="ressourceTableBody"></tbody>
+</table>
+
+<script>
+    const apiBase = "/api/ressources";
+
+    async function chargerEvenements() {
+        const res = await fetch("/api/evenements");
+        const evenements = await res.json();
+        const select = document.getElementById("evenementSelect");
+        evenements.forEach(ev => {
+            const option = document.createElement("option");
+            option.value = ev.id;
+            option.textContent = ev.titre;
+            select.appendChild(option);
+        });
+    }
+
+    async function chargerRessources() {
+        const res = await fetch(apiBase);
+        const ressources = await res.json();
+        const tbody = document.getElementById("ressourceTableBody");
+        tbody.innerHTML = "";
+        ressources.forEach(r => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${r.nom}</td>
+                <td>${r.quantite}</td>
+                <td>${r.evenement.titre}</td>
+                <td>
+                    <button class="button" onclick="remplirForm(${r.id}, '${r.nom}', ${r.quantite}, ${r.evenement.id})">✏️</button>
+                    <button class="button" onclick="supprimer(${r.id})">🗑️</button>
+                </td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function remplirForm(id, nom, quantite, evenementId) {
+        document.getElementById("ressourceId").value = id;
+        document.getElementById("nom").value = nom;
+        document.getElementById("quantite").value = quantite;
+        document.getElementById("evenementSelect").value = evenementId;
+    }
+
+    async function supprimer(id) {
+        if (confirm("Supprimer cette ressource ?")) {
+            await fetch(`${apiBase}/${id}`, { method: "DELETE" });
+            chargerRessources();
+        }
+    }
+
+    document.getElementById("ressourceForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("ressourceId").value;
+        const nom = document.getElementById("nom").value;
+        const quantite = document.getElementById("quantite").value;
+        const evenementId = document.getElementById("evenementSelect").value;
+
+        const methode = id ? "PUT" : "POST";
+        const url = id ? `${apiBase}/${id}` : apiBase;
+        const ressource = { nom, quantite, evenement: { id: evenementId } };
+
+        await fetch(url, {
+            method: methode,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(ressource)
+        });
+
+        e.target.reset();
+        chargerRessources();
+    });
+
+    window.onload = async () => {
+        await chargerEvenements();
+        await chargerRessources();
+    };
+</script>
+
+</body>
+</html>
