@@ -1,57 +1,120 @@
 /* GÉNÉRAL */
 body {
-    font-family: Arial, sans-serif;
-    background: url("../images/background.jpg") no-repeat center center fixed;
-    background-size: cover;
-    color: white;
+    font-family: 'Kosugi Maru', sans-serif;
+    background-image: url('https://www.transparenttextures.com/patterns/fabric-of-squares.png');
+    background-color: #fdf6e3;
     margin: 0;
-    padding: 20px;
+    padding: 0;
     text-align: center;
 }
 
 /* HEADER */
 header {
+    background-color: #b71c1c;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px;
 }
 
 .logo {
-    height: 200px;
+    height: 150px;
+}
+
+/* MENU ONGLET HORIZONTAL */
+nav {
+    background-color: #c62828;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 10px 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+nav a {
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    padding: 10px 25px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+nav a:hover,
+nav a.active {
+    background-color: #8e0000;
 }
 
 /* TITRES */
-h1, h2 {
-    color: white;
-    text-align: center;
+h1 {
+    color: #b71c1c;
+    margin-top: 20px;
+    font-size: 2.5em;
 }
 
-/* MENU BOUTONS */
-.menu {
+p {
+    font-size: 1.2em;
+    color: #444;
+    margin-bottom: 30px;
+}
+
+/* CONTENEUR ÉVÉNEMENTS */
+.events-container {
+    max-width: 900px;
+    margin: 0 auto 50px;
+    text-align: left;
+    padding: 0 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+    justify-content: center;
+}
+
+.event-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    width: 280px;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-.button, .menu a, button {
-    display: inline-block;
-    width: 300px;
-    padding: 10px;
-    margin: 5px;
     text-decoration: none;
-    color: white;
-    background-color: #dc3545;
-    border-radius: 5px;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-    border: none;
-    cursor: pointer;
+    color: inherit;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.button:hover, .menu a:hover, button:hover {
-    background-color: #a71d2a;
+.event-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.event-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+}
+
+.event-content {
+    padding: 15px;
+}
+
+.event-content h3 {
+    margin: 0 0 10px;
+    color: #b71c1c;
+}
+
+.event-content p {
+    margin: 0;
+    color: #555;
+    font-size: 1em;
+}
+
+/* FOOTER */
+footer {
+    margin-top: 40px;
+    font-size: 0.9em;
+    color: #999;
 }
 
 /* TABLEAUX */
@@ -66,7 +129,7 @@ th, td {
     border: 1px solid #fff;
     padding: 10px;
     text-align: center;
-    color: white;
+    color: black;
 }
 
 th {

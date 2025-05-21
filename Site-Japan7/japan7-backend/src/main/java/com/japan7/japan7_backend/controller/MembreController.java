@@ -38,6 +38,7 @@ public class MembreController {
             m.setNom(membre.getNom());
             m.setPrenom(membre.getPrenom());
             m.setEmail(membre.getEmail());
+            m.setPassword(membre.getPassword());
             return repo.save(m);
         }).orElseThrow(() -> new RuntimeException("Membre non trouvé"));
     }
