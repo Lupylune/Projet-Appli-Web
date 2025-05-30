@@ -2,7 +2,9 @@ package com.japan7.japan7_backend.controller;
 
 import com.japan7.japan7_backend.model.Evenement;
 import com.japan7.japan7_backend.repository.EvenementRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,25 +37,24 @@ public class EvenementController {
 
     @PutMapping("/{id}")
     public Evenement update(@PathVariable Long id, @RequestBody Evenement evt) {
-        return repo.findById(id).map(e -> {
-            e.setTitre(evt.getTitre());
-            e.setDescription(evt.getDescription());
-            e.setDate(evt.getDate());
-            e.setTypeActivite(evt.getTypeActivite());
+        System.out.println("🔎 Modification de l'événement id = " + id + ", evt.id = " + evt.getId());
 
-            e.setAnimeTitre(evt.getAnimeTitre());
-            e.setAnimeSynopsis(evt.getAnimeSynopsis());
-            e.setAnimeImageUrl(evt.getAnimeImageUrl());
-            e.setEpisodeCourant(evt.getEpisodeCourant());
-            e.setAnimeMalId(evt.getAnimeMalId());
+        // On impose que l’ID transmis dans le path et l’objet soient cohérents
+        if (evt.getId() != null && !evt.getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "L’ID de l’URL et du corps ne correspondent pas");
+        }
 
-            e.setChansonTitre(evt.getChansonTitre());
-            e.setChansonArtiste(evt.getChansonArtiste());
-            e.setChansonSpotifyUrl(evt.getChansonSpotifyUrl());
+        evt.setId(id);
 
-            return repo.save(e);
-        }).orElseThrow(() -> new RuntimeException("Événement non trouvé"));
+        if (!repo.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Événement non trouvé");
+        }
+
+        return repo.save(evt);
     }
+
+
+
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {

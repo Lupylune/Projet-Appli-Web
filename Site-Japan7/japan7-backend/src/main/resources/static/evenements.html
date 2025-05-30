@@ -16,6 +16,7 @@
 <table id="evenementsTable">
     <thead>
     <tr>
+        <th>Affiche</th>
         <th>Titre</th>
         <th>Description</th>
         <th>Date</th>
@@ -26,13 +27,13 @@
     <tbody></tbody>
 </table>
 
-<h2>➕ Ajouter un événement</h2>
+<h2 id="formTitle">➕ Ajouter un événement</h2>
 <form id="formAjout">
     <label for="titre">Titre :</label>
     <input type="text" id="titre" required>
 
     <label for="description">Description :</label>
-    <input type="text" id="description" required>
+    <input type="text" id="description">
 
     <label for="date">Date :</label>
     <input type="datetime-local" id="date" required>
@@ -70,6 +71,8 @@
 </form>
 
 <script>
+    let idModification = null;
+
     async function chargerEvenements() {
         const response = await fetch('/api/evenements');
         const data = await response.json();
@@ -80,15 +83,16 @@
         data.forEach(evt => {
             const row = document.createElement('tr');
             row.innerHTML = `
+                <td>${evt.animeImageUrl ? `<img src="${evt.animeImageUrl}" alt="Anime" width="100">` : ''}</td>
                 <td>${evt.titre}</td>
                 <td>${evt.description}</td>
                 <td>${evt.date}</td>
                 <td>
                     ${evt.typeActivite}
-                    ${evt.animeImageUrl ? `<br><img src="${evt.animeImageUrl}" alt="Image anime" width="80">` : ''}
+                    ${evt.typeActivite === 'PROJECTION_ANIME' ? `<br>🎞️ Épisode : ${evt.episodeCourant}` : ''}
                 </td>
                 <td>
-                    <button class="button" onclick="remplirFormulaire(${evt.id}, '${evt.titre}', '${evt.description}', '${evt.date}', '${evt.typeActivite}')">Modifier</button>
+                    <button class="button" onclick='remplirFormulaire(${evt.id})'>Modifier</button>
                     <button class="button" onclick="supprimerEvenement(${evt.id})">Supprimer</button>
                 </td>
             `;
@@ -96,50 +100,40 @@
         });
     }
 
+    async function remplirFormulaire(id) {
+        const response = await fetch(`/api/evenements/${id}`);
+        const evt = await response.json();
+
+        document.getElementById('titre').value = evt.titre;
+        document.getElementById('description').value = evt.typeActivite === "PROJECTION_ANIME" ? "" : evt.description;
+        document.getElementById('date').value = evt.date.substring(0, 16);
+        document.getElementById('type').value = evt.typeActivite;
+        document.querySelector('#formAjout button[type="submit"]').textContent = "Modifier";
+        document.getElementById('formTitle').textContent = "✏️ Modifier un événement";
+        gererChampsSpecifiques();
+
+        if (evt.typeActivite === "PROJECTION_ANIME") {
+            document.getElementById("animeTitre").value = evt.animeTitre || "";
+            document.getElementById("animeSynopsis").value = evt.animeSynopsis || "";
+            document.getElementById("animeImageUrl").value = evt.animeImageUrl || "";
+            document.getElementById("animeMalId").value = evt.animeMalId || "";
+            document.getElementById("episodeCourant").value = evt.episodeCourant || 1;
+            document.getElementById("animeSearch").value = evt.animeTitre || "";
+        }
+
+        idModification = id;
+    }
+
     function gererChampsSpecifiques() {
         const type = document.getElementById("type").value;
         document.getElementById("animeFields").style.display = (type === "PROJECTION_ANIME") ? "block" : "none";
-        document.getElementById("karaokeFields").style.display = (type === "KARAOKE") ? "block" : "none";
-    }
-
-    async function rechercherAnime() {
-        const query = document.getElementById("animeSearch").value;
-        if (!query) return;
-
-        const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=1`);
-        const data = await res.json();
-        if (data.data && data.data.length > 0) {
-            const anime = data.data[0];
-            document.getElementById("animeTitre").value = anime.title;
-            document.getElementById("animeSynopsis").value = anime.synopsis;
-            document.getElementById("animeImageUrl").value = anime.images.jpg.image_url;
-            document.getElementById("animeMalId").value = anime.mal_id;
-        } else {
-            alert("Aucun anime trouvé !");
-        }
+        document.getElementById("description").required = (type !== "PROJECTION_ANIME");
     }
 
     async function supprimerEvenement(id) {
         if (confirm("Confirmer la suppression ?")) {
             await fetch(`/api/evenements/${id}`, { method: 'DELETE' });
             await chargerEvenements();
-        }
-    }
-
-    async function rechercherChanson() {
-        const query = document.getElementById("chansonRecherche").value;
-        if (!query) return;
-
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&limit=1`);
-        const data = await res.json();
-
-        if (data.results && data.results.length > 0) {
-            const track = data.results[0];
-            document.getElementById("chansonTitre").value = track.trackName;
-            document.getElementById("chansonArtiste").value = track.artistName;
-            document.getElementById("chansonSpotifyUrl").value = track.trackViewUrl;
-        } else {
-            alert("Aucune chanson trouvée !");
         }
     }
 
@@ -168,63 +162,58 @@
         document.getElementById("animeSynopsis").value = anime.synopsis;
         document.getElementById("animeImageUrl").value = anime.images.jpg.image_url;
         document.getElementById("animeMalId").value = anime.mal_id;
-
-        document.getElementById("suggestionsAnime").innerHTML = '';
         document.getElementById("animeSearch").value = anime.title;
+        document.getElementById("suggestionsAnime").innerHTML = '';
     }
 
-
-
-    let idModification = null;
-
-    function remplirFormulaire(id, titre, description, date, type) {
-        document.getElementById('titre').value = titre;
-        document.getElementById('description').value = description;
-        document.getElementById('date').value = date.substring(0, 16);
-        document.getElementById('type').value = type;
-        gererChampsSpecifiques();
-        idModification = id;
-    }
-
-    document.getElementById('formAjout').addEventListener('submit', async (e) => {
+    document.getElementById('formAjout').addEventListener('submit', async function (e) {
         e.preventDefault();
 
         const type = document.getElementById("type").value;
 
         const evenement = {
             titre: document.getElementById("titre").value,
-            description: document.getElementById("description").value,
             date: document.getElementById("date").value,
             typeActivite: type
         };
 
         if (type === "PROJECTION_ANIME") {
+            evenement.description = document.getElementById("animeSynopsis").value;
             evenement.animeTitre = document.getElementById("animeTitre").value;
             evenement.animeSynopsis = document.getElementById("animeSynopsis").value;
             evenement.animeImageUrl = document.getElementById("animeImageUrl").value;
             evenement.episodeCourant = parseInt(document.getElementById("episodeCourant").value);
             evenement.animeMalId = document.getElementById("animeMalId").value;
-
-            if (type === "KARAOKE") {
-                evenement.chansonTitre = document.getElementById("chansonTitre").value;
-                evenement.chansonArtiste = document.getElementById("chansonArtiste").value;
-                evenement.chansonSpotifyUrl = document.getElementById("chansonSpotifyUrl").value;
-            }
+        } else {
+            evenement.description = document.getElementById("description").value;
         }
 
-        const url = idModification ? `/api/evenements/${idModification}` : '/api/evenements';
-        const method = idModification ? 'PUT' : 'POST';
+        let url = "/api/evenements";
+        let method = "POST";
 
-        await fetch(url, {
+        if (idModification !== null) {
+            url += `/${idModification}`;
+            method = "PUT";
+            evenement.id = idModification;
+        }
+
+        const res = await fetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(evenement)
         });
 
-        e.target.reset();
-        document.getElementById("animeFields").style.display = "none";
-        idModification = null;
-        await chargerEvenements();
+        if (res.ok) {
+            idModification = null;
+            e.target.reset();
+            document.querySelector('#formAjout button[type="submit"]').textContent = "Ajouter";
+            document.getElementById('formTitle').textContent = "➕ Ajouter un événement";
+            document.getElementById("animeFields").style.display = "none";
+            await chargerEvenements();
+        } else {
+            const err = await res.text();
+            alert("Erreur lors de l'enregistrement : " + err);
+        }
     });
 
     chargerEvenements();
