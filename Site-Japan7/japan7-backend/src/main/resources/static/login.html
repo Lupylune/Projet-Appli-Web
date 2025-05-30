@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion - Japan7</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <img src="images/japan7.jpeg" alt="Logo Japan7" class="logo">
+</header>
+
+<h1>🔐 Connexion</h1>
+
+<form id="loginForm">
+    <label for="email">Email :</label>
+    <input type="email" id="email" required>
+
+    <label for="password">Mot de passe :</label>
+    <input type="password" id="password" required>
+
+    <button type="submit" class="button">Se connecter</button>
+</form>
+
+<p id="erreur" style="color: red;"></p>
+
+<script>
+    const form = document.getElementById('loginForm');
+    const erreur = document.getElementById('erreur');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (response.ok) {
+            location.href = 'index.html';
+        } else {
+            erreur.textContent = 'Identifiants incorrects. Veuillez réessayer.';
+        }
+    });
+</script>
+
+</body>
+</html>
