@@ -40,6 +40,17 @@ public class EvenementController {
             e.setDescription(evt.getDescription());
             e.setDate(evt.getDate());
             e.setTypeActivite(evt.getTypeActivite());
+
+            e.setAnimeTitre(evt.getAnimeTitre());
+            e.setAnimeSynopsis(evt.getAnimeSynopsis());
+            e.setAnimeImageUrl(evt.getAnimeImageUrl());
+            e.setEpisodeCourant(evt.getEpisodeCourant());
+            e.setAnimeMalId(evt.getAnimeMalId());
+
+            e.setChansonTitre(evt.getChansonTitre());
+            e.setChansonArtiste(evt.getChansonArtiste());
+            e.setChansonSpotifyUrl(evt.getChansonSpotifyUrl());
+
             return repo.save(e);
         }).orElseThrow(() -> new RuntimeException("Événement non trouvé"));
     }
