@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Événement</title>
+</head>
+<body>
+<h1 id="titre"></h1>
+<p id="description"></p>
+<p><strong>Date :</strong> <span id="date"></span></p>
+<p><strong>Type :</strong> <span id="type"></span></p>
+
+<div id="details-specifiques"></div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+
+    fetch(`http://localhost:8080/api/evenements/${id}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+            if (!data) {
+                document.body.innerHTML = "<p>Erreur : Événement introuvable.</p>";
+                return;
+            }
+
+            // Cas où Optional est renvoyé avec une valeur
+            const evenement = data;
+
+            document.getElementById("titre").textContent = evenement.titre;
+            document.getElementById("description").textContent = evenement.description;
+            document.getElementById("date").textContent = evenement.date?.replace("T", " ") || "Non précisée";
+            document.getElementById("type").textContent = evenement.typeActivite;
+
+            const details = document.getElementById("details-specifiques");
+
+            switch (evenement.typeActivite) {
+                case "PROJECTION_ANIME":
+                    details.innerHTML = `
+                            <h3>${evenement.animeTitre}</h3>
+                            <img src="${evenement.animeImageUrl}" alt="Image anime" width="200">
+                            <p><strong>Synopsis :</strong> ${evenement.animeSynopsis}</p>
+                            <p><strong>Épisode :</strong> ${evenement.episodeCourant}</p>
+                        `;
+                    break;
+                case "KARAOKE":
+                    details.innerHTML = `
+                            <p><strong>Chanson :</strong> ${evenement.chansonTitre} - ${evenement.chansonArtiste}</p>
+                            <a href="${evenement.chansonSpotifyUrl}" target="_blank">Écouter sur Spotify</a>
+                        `;
+                    break;
+                // Tu peux gérer d'autres cas ici
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            document.body.innerHTML = "<p>Erreur lors du chargement de l'événement.</p>";
+        });
+</script>
+</body>
+</html>

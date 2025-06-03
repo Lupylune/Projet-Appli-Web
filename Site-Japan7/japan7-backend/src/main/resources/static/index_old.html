@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Japan7 - Accueil</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+    <a href="index.html">
+        <img src="images/japan7.jpeg" alt="Logo Japan7" class="logo">
+    </a>
+</header>
+
+<!-- Menu onglets -->
+<nav id="navbar-logged-admin" style="display: none;">
+    <a href="index.html" class="active">Accueil</a>
+    <a href="gestion_evenements.html">Gestion des événements</a>
+    <a href="membres.html">Gestion des membres</a>
+    <a href="inscriptions.html">Inscriptions aux événements</a>
+    <a href="commentaires.html">Commentaires et avis</a>
+    <a href="ressources.html">Gestion des ressources</a>
+    <a href="javascript:void(0)" onclick="logout()">Déconnexion</a>
+</nav>
+
+<nav id="navbar-logged-in" style="display: none;">
+    <a href="index.html" class="active">Accueil</a>
+    <a href="javascript:void(0)" onclick="logout()">Déconnexion</a>
+</nav>
+
+<nav id="navbar-logged-off" style="display: none;">
+    <a href="index.html" class="active">Accueil</a>
+    <a href="login.html">Connexion</a>
+    <a href="register.html">Inscription</a>
+</nav>
+
+<h1>Bienvenue sur Japan7</h1>
+<p>Projections, Karaoké, Cuisine japonaise, Culture & Amitié</p>
+
+<!-- Liste d'événements -->
+<div class="events-container" id="eventsContainer">
+    <!-- Les cartes événements seront insérées ici par JS -->
+</div>
+
+<footer>
+    &copy; 2025 Club Japan7. Tous droits réservés.
+</footer>
+
+<script>
+    // Exemple d'événements
+    const events = [
+        {
+            title: "Projection d'anime",
+            description: "えご.",
+            imageUrl: "images/Blue-Lock.png"
+        },
+        {
+            title: "Soirée Karaoké",
+            description: "Chantez vos chansons préférées !",
+            imageUrl: "images/karaoke.jpeg"
+        },
+        {
+            title: "Atelier cuisine",
+            description: "Apprenez à faire des sushis.",
+            imageUrl: "images/cooking.jpg"
+        }
+    ];
+
+    const container = document.getElementById('eventsContainer');
+
+    events.forEach(event => {
+        const card = document.createElement('div');
+        card.classList.add('event-card');
+        card.innerHTML = `
+            <img src="${event.imageUrl}" alt="${event.title}" />
+            <div class="event-content">
+                <h3>${event.title}</h3>
+                <p>${event.description}</p>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+
+    //Affichage connecté et admin
+    fetch("/api/me")
+        .then(res => res.ok ? res.json() : null)
+        .then(user => {
+            if (user) {
+                fetch("/api/admin")
+                    .then(res => res.ok ? res.json() : null)
+                    .then(admin => {
+                        console.log(admin);
+                        console.log(user)
+                        if (admin) {
+                            document.getElementById("navbar-logged-admin").style.display = "flex";
+                        } else {
+                            document.getElementById("navbar-logged-in").style.display = "flex";
+                        }
+                    });
+            } else {
+                document.getElementById("navbar-logged-off").style.display = "flex";
+            }
+        });
+
+    function logout() {
+        fetch("/api/logout", { method: "POST" }).then(() => location.reload());
+    }
+</script>
+</body>
+</html>
