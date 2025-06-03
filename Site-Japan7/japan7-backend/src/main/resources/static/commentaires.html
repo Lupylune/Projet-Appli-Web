@@ -70,9 +70,9 @@
                 <td>${c.auteur}</td>
                 <td>${c.contenu}</td>
                 <td>${c.date ? c.date.replace('T', ' ').substring(0, 16) : ''}</td>
-                <td>${c.evenement?.titre || ''}</td>
+                <td>${c.evenementTitre}</td>
                 <td>
-                    <button class="button" onclick="modifierCommentaire(${c.id}, '${c.auteur}', '${c.contenu}', ${c.evenement.id})">Modifier</button>
+                    <button class="button" onclick="modifierCommentaire(${c.id}, '${c.auteur}', '${c.contenu}', ${c.evenementId})">
                     <button class="button" onclick="supprimerCommentaire(${c.id})">Supprimer</button>
                 </td>
             `;
@@ -87,7 +87,7 @@
         const contenu = document.getElementById('contenu').value;
         const evenementId = document.getElementById('evenement').value;
 
-        const commentaire = { auteur, contenu, evenement: { id: evenementId } };
+        const commentaire = { auteur, contenu, evenementId: evenementId };
 
         const method = id ? 'PUT' : 'POST';
         const url = id ? `/api/commentaires/${id}` : '/api/commentaires';
