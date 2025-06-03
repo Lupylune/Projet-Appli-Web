@@ -43,8 +43,18 @@ public class LoginController {
     @GetMapping("/me")
     public ResponseEntity<?> me(HttpSession session) {
         Object membreId = session.getAttribute("membre");
+        Object admin = session.getAttribute("admin");
         if (membreId != null) {
             return ResponseEntity.ok(membreId);
+        }
+        return ResponseEntity.status(401).build();
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<?> admin(HttpSession session) {
+        Object admin = session.getAttribute("admin");
+        if (admin != null) {
+            return ResponseEntity.ok(admin);
         }
         return ResponseEntity.status(401).build();
     }

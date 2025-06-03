@@ -103,13 +103,18 @@
 </header>
 
 <!-- Menu onglets -->
-<nav id="navbar-logged-in" style="display: none;">
+<nav id="navbar-logged-admin" style="display: none;">
     <a href="index.html" class="active">Accueil</a>
     <a href="evenements.html">Gestion des événements</a>
     <a href="membres.html">Gestion des membres</a>
     <a href="inscriptions.html">Inscriptions aux événements</a>
     <a href="commentaires.html">Commentaires et avis</a>
     <a href="ressources.html">Gestion des ressources</a>
+    <a href="javascript:void(0)" onclick="logout()">Déconnexion</a>
+</nav>
+
+<nav id="navbar-logged-in" style="display: none;">
+    <a href="index.html" class="active">Accueil</a>
     <a href="javascript:void(0)" onclick="logout()">Déconnexion</a>
 </nav>
 
@@ -172,8 +177,17 @@
         .then(res => res.ok ? res.json() : null)
         .then(user => {
             if (user) {
-                // document.getElementById("username").textContent = user.username;
-                document.getElementById("navbar-logged-in").style.display = "flex";
+                fetch("/api/admin")
+                    .then(res => res.ok ? res.json() : null)
+                    .then(admin => {
+                        console.log(admin);
+                        console.log(user)
+                        if (admin) {
+                            document.getElementById("navbar-logged-admin").style.display = "flex";
+                        } else {
+                            document.getElementById("navbar-logged-in").style.display = "flex";
+                        }
+                    });
             } else {
                 document.getElementById("navbar-logged-off").style.display = "flex";
             }

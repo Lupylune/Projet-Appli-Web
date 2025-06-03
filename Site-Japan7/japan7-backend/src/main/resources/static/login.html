@@ -63,6 +63,7 @@
         .then(res => res.ok ? res.json() : null)
         .then(user => {
             if (user) {
+                console.log(user);
                 window.location.href = "index.html";
             }
         });
