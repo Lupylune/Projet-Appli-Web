@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/membres")
@@ -26,6 +27,7 @@ public class MembreController {
 
     @PostMapping
     public Membre create(@RequestBody Membre membre) {
+
         return repo.save(membre);
     }
 
@@ -49,13 +51,30 @@ public class MembreController {
     }
 
     @PutMapping("/{id}")
-    public Membre update(@PathVariable Long id, @RequestBody Membre membre) {
-        return repo.findById(id).map(m -> {
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Membre membre) {
+        // Check if the email already exists and is linked to another member
+        Optional<Membre> existingByEmail = repo.findByEmail(membre.getEmail());
+        if (existingByEmail.isPresent() && !existingByEmail.get().getId().equals(id)) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body("Un compte avec cet email existe déjà.");
+        }
+
+        // Update the member if they exist
+        Optional<Membre> om = repo.findById(id);
+        if (om.isPresent()) {
+            Membre m = om.get();
             m.setNom(membre.getNom());
             m.setPrenom(membre.getPrenom());
             m.setEmail(membre.getEmail());
-            m.setPassword(membre.getPassword());
-            return repo.save(m);
-        }).orElseThrow(() -> new RuntimeException("Membre non trouvé"));
+            if (membre.getPassword() != null && !membre.getPassword().isEmpty()) {
+                m.setPassword(membre.getPassword());
+            }
+            return ResponseEntity.ok(repo.save(m));
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Membre non trouvé.");
+        }
     }
 }

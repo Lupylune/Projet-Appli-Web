@@ -13,7 +13,10 @@ public class Membre {
 
     private String nom;
     private String prenom;
-    private String email;
+
+    @Column(unique = true)
+     private String email;
+
     private String password;
     private boolean admin;
 

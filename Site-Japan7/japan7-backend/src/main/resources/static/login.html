@@ -59,6 +59,7 @@
         }
     });
 
+    //Protection connecté
     fetch("/api/me")
         .then(res => res.ok ? res.json() : null)
         .then(user => {
