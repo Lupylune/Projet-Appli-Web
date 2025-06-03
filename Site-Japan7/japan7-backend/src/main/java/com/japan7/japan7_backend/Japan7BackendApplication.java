@@ -9,7 +9,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.web.servlet.view.RedirectView;
+
 import java.time.LocalDateTime;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,19 +21,19 @@ import org.springframework.web.bind.annotation.RestController;
 @EnableJpaRepositories("com.japan7.japan7_backend.repository")
 public class Japan7BackendApplication {
 
-	@RestController
-	@RequestMapping("/")
-	public class HomeController {
+    @RestController
+    @RequestMapping("/")
+    public class HomeController {
 
-		@GetMapping("/")
-		public RedirectView redirectToHome() {
-			return new RedirectView("/index.html");
-		}
-	}
+        @GetMapping("/")
+        public RedirectView redirectToHome() {
+            return new RedirectView("/index.html");
+        }
+    }
 
 
-	public static void main(String[] args) {
-		SpringApplication.run(Japan7BackendApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(Japan7BackendApplication.class, args);
+    }
 
 }

@@ -4,12 +4,21 @@
     <meta charset="UTF-8">
     <title>Connexion - Japan7</title>
     <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet" />
 </head>
 <body>
 
 <header>
-    <img src="images/japan7.jpeg" alt="Logo Japan7" class="logo">
+    <a href="index.html">
+        <img src="images/japan7.jpeg" alt="Logo Japan7" class="logo">
+    </a>
 </header>
+
+<nav id="navbar-logged-off">
+<a href="index.html">Accueil</a>
+<a href="login.html" class="active">Connexion</a>
+<a href="register.html">Inscription</a>
+</nav>
 
 <h1>🔐 Connexion</h1>
 
@@ -24,6 +33,8 @@
 </form>
 
 <p id="erreur" style="color: red;"></p>
+
+<a href="register.html">Pas de compte ?</a>
 
 <script>
     const form = document.getElementById('loginForm');
@@ -47,6 +58,14 @@
             erreur.textContent = 'Identifiants incorrects. Veuillez réessayer.';
         }
     });
+
+    fetch("/api/me")
+        .then(res => res.ok ? res.json() : null)
+        .then(user => {
+            if (user) {
+                window.location.href = "index.html";
+            }
+        });
 </script>
 
 </body>

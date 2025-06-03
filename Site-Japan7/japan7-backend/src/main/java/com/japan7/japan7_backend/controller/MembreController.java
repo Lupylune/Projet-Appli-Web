@@ -2,6 +2,8 @@ package com.japan7.japan7_backend.controller;
 
 import com.japan7.japan7_backend.model.Membre;
 import com.japan7.japan7_backend.repository.MembreRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +27,20 @@ public class MembreController {
     @PostMapping
     public Membre create(@RequestBody Membre membre) {
         return repo.save(membre);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody Membre membre) {
+        // Check if the email is already used
+        if (repo.findByEmail(membre.getEmail()).isPresent()) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body("Un compte avec cet email existe déjà.");
+        }
+
+        // If email is free, create the account
+        Membre saved = repo.save(membre);
+        return ResponseEntity.ok(saved);
     }
 
     @DeleteMapping("/{id}")
