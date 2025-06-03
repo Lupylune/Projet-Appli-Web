@@ -1,15 +1,18 @@
 package com.japan7.japan7_backend.controller;
 
+import com.japan7.japan7_backend.dto.InscriptionDTO;
+import com.japan7.japan7_backend.model.Evenement;
 import com.japan7.japan7_backend.model.Inscription;
 import com.japan7.japan7_backend.model.Membre;
-import com.japan7.japan7_backend.model.Evenement;
+import com.japan7.japan7_backend.repository.EvenementRepository;
 import com.japan7.japan7_backend.repository.InscriptionRepository;
 import com.japan7.japan7_backend.repository.MembreRepository;
-import com.japan7.japan7_backend.repository.EvenementRepository;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/inscriptions")
@@ -32,27 +35,40 @@ public class InscriptionController {
     }
 
     @PostMapping
-    public Inscription inscrire(@RequestParam Long membreId, @RequestParam Long evenementId) {
-        Membre membre = membreRepo.findById(membreId)
-                .orElseThrow(() -> new RuntimeException("Membre introuvable"));
-        Evenement evenement = evenementRepo.findById(evenementId)
-                .orElseThrow(() -> new RuntimeException("Événement introuvable"));
+    public ResponseEntity<?> inscrireMembre(@RequestBody InscriptionDTO dto) {
+        Optional<Membre> membreOpt = membreRepo.findByEmail(dto.getEmail());
+        if (membreOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("Membre inexistant.");
+        }
+        Membre membre = membreOpt.get();
 
-        // Vérifie si l'inscription existe déjà
-        List<Inscription> existantes = repo.findAll();
-        boolean dejaInscrit = existantes.stream().anyMatch(i ->
-                i.getMembre().getId().equals(membreId) && i.getEvenement().getId().equals(evenementId));
-
-        if (dejaInscrit) {
-            throw new RuntimeException("Ce membre est déjà inscrit à cet événement.");
+        Evenement evenement = evenementRepo.findById(dto.getEvenementId()).orElse(null);
+        if (evenement == null) {
+            return ResponseEntity.badRequest().body("Événement introuvable.");
         }
 
-        return repo.save(new Inscription(membre, evenement));
-    }
+        boolean dejaInscrit = repo.findAll().stream().anyMatch(i ->
+                i.getMembre().getId().equals(membre.getId()) &&
+                        i.getEvenement().getId().equals(evenement.getId()));
 
+        if (dejaInscrit) {
+            return ResponseEntity.badRequest().body("Ce membre est déjà inscrit à cet événement.");
+        }
+
+        Inscription inscription = new Inscription(membre, evenement);
+        repo.save(inscription);
+
+        return ResponseEntity.ok("Inscription enregistrée.");
+    }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         repo.deleteById(id);
     }
+
+    @GetMapping("/evenement/{evenementId}")
+    public List<Inscription> getInscriptionsParEvenement(@PathVariable Long evenementId) {
+        return repo.findByEvenementId(evenementId);
+    }
+
 }

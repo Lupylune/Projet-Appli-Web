@@ -12,6 +12,28 @@
 
 <div id="details-specifiques"></div>
 
+<h2>Inscription à cet événement</h2>
+<form id="form-inscription">
+    <input type="text" name="nom" placeholder="Votre nom" required>
+    <input type="email" name="email" placeholder="Votre email" required>
+    <button type="submit">S'inscrire</button>
+</form>
+<p id="message-inscription"></p>
+
+<h2>Laisser un commentaire</h2>
+<form id="form-commentaire">
+    <input type="text" name="auteur" placeholder="Votre nom" required>
+    <textarea name="contenu" placeholder="Votre commentaire" required></textarea>
+    <button type="submit">Envoyer</button>
+</form>
+<p id="message-commentaire"></p>
+
+<h3>Commentaires :</h3>
+<ul id="liste-commentaires"></ul>
+
+<h3>Liste des inscrits :</h3>
+<ul id="liste-inscrits"></ul>
+
 <script>
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
@@ -24,38 +46,107 @@
                 return;
             }
 
-            // Cas où Optional est renvoyé avec une valeur
             const evenement = data;
-
             document.getElementById("titre").textContent = evenement.titre;
             document.getElementById("description").textContent = evenement.description;
             document.getElementById("date").textContent = evenement.date?.replace("T", " ") || "Non précisée";
             document.getElementById("type").textContent = evenement.typeActivite;
 
             const details = document.getElementById("details-specifiques");
-
             switch (evenement.typeActivite) {
                 case "PROJECTION_ANIME":
                     details.innerHTML = `
-                            <h3>${evenement.animeTitre}</h3>
-                            <img src="${evenement.animeImageUrl}" alt="Image anime" width="200">
-                            <p><strong>Synopsis :</strong> ${evenement.animeSynopsis}</p>
-                            <p><strong>Épisode :</strong> ${evenement.episodeCourant}</p>
-                        `;
+                        <h3>${evenement.animeTitre}</h3>
+                        <img src="${evenement.animeImageUrl}" alt="Image anime" width="200">
+                        <p><strong>Synopsis :</strong> ${evenement.animeSynopsis}</p>
+                        <p><strong>Épisode :</strong> ${evenement.episodeCourant}</p>
+                    `;
                     break;
                 case "KARAOKE":
                     details.innerHTML = `
-                            <p><strong>Chanson :</strong> ${evenement.chansonTitre} - ${evenement.chansonArtiste}</p>
-                            <a href="${evenement.chansonSpotifyUrl}" target="_blank">Écouter sur Spotify</a>
-                        `;
+                        <p><strong>Chanson :</strong> ${evenement.chansonTitre} - ${evenement.chansonArtiste}</p>
+                        <a href="${evenement.chansonSpotifyUrl}" target="_blank">Écouter sur Spotify</a>
+                    `;
                     break;
-                // Tu peux gérer d'autres cas ici
+                default:
+                    details.innerHTML = "<p>Aucun détail spécifique pour ce type d'événement.</p>";
             }
+
+            chargerCommentaires();
+            chargerInscriptions();
         })
         .catch(err => {
             console.error(err);
             document.body.innerHTML = "<p>Erreur lors du chargement de l'événement.</p>";
         });
+
+    document.getElementById("form-inscription").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const nom = this.nom.value;
+        const email = this.email.value;
+
+        fetch("http://localhost:8080/api/inscriptions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nom, email, evenementId: id })
+        })
+            .then(res => res.ok ? res.text() : res.text().then(msg => { throw new Error(msg); }))
+            .then(msg => {
+                document.getElementById("message-inscription").textContent = msg;
+                this.reset();
+                chargerInscriptions();
+            })
+            .catch(err => {
+                document.getElementById("message-inscription").textContent = "Erreur : " + err.message;
+            });
+    });
+
+    document.getElementById("form-commentaire").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const auteur = this.auteur.value;
+        const contenu = this.contenu.value;
+
+        fetch("http://localhost:8080/api/commentaires", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ auteur, contenu, evenementId: id })
+        })
+            .then(res => res.ok ? "Commentaire ajouté !" : "Erreur lors de l'envoi.")
+            .then(msg => {
+                document.getElementById("message-commentaire").textContent = msg;
+                chargerCommentaires();
+            })
+            .catch(() => document.getElementById("message-commentaire").textContent = "Erreur réseau.");
+    });
+
+    function chargerCommentaires() {
+        fetch(`http://localhost:8080/api/commentaires/evenement/${id}`)
+            .then(res => res.json())
+            .then(commentaires => {
+                const liste = document.getElementById("liste-commentaires");
+                liste.innerHTML = "";
+                commentaires.forEach(c => {
+                    const li = document.createElement("li");
+                    li.textContent = `${c.auteur} : ${c.contenu}`;
+                    liste.appendChild(li);
+                });
+            });
+    }
+
+    function chargerInscriptions() {
+        fetch(`http://localhost:8080/api/inscriptions/evenement/${id}`)
+            .then(res => res.json())
+            .then(inscriptions => {
+                const liste = document.getElementById("liste-inscrits");
+                liste.innerHTML = "";
+                inscriptions.forEach(inscription => {
+                    const m = inscription.membre;
+                    const li = document.createElement("li");
+                    li.textContent = `${m.prenom} ${m.nom} (${m.email})`;
+                    liste.appendChild(li);
+                });
+            });
+    }
 </script>
 </body>
 </html>
