@@ -27,6 +27,7 @@ public class LoginController {
 
             if (membre.verifyPassword(request.password())) {
                 session.setAttribute("membre", membre.getId());
+                session.setAttribute("admin", membre.isAdmin());
                 return ResponseEntity.ok().build();
             }
         }

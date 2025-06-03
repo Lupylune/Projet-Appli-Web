@@ -1,5 +1,6 @@
 package com.japan7.japan7_backend.model;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -14,6 +15,7 @@ public class Membre {
     private String prenom;
     private String email;
     private String password;
+    private boolean admin;
 
     public Membre() {}
 
@@ -21,6 +23,7 @@ public class Membre {
         this.nom = nom;
         this.prenom = prenom;
         this.email = email;
+        this.admin = false;
 
         System.out.println("Membre créé : " + nom + " " + prenom + " " + email + " " + password);
 
@@ -48,6 +51,8 @@ public class Membre {
         String hashed = encoder.encode(password);
         this.password = hashed;
     }
+
+    public boolean isAdmin() { return admin; }
 
     public boolean verifyPassword(String password) {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
