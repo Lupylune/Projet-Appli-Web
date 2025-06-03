@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Administration - Bureau et Trésorerie</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <a href="index.html"><img src="images/japan7.jpeg" alt="Logo Japan7" class="logo"></a>
+</header>
+
+<h1>Gestion du Bureau</h1>
+<form id="bureauForm">
+  <div id="membres-container"></div>
+  <button type="submit">Enregistrer le bureau</button>
+</form>
+
+<h2>Trésorerie</h2>
+<p>Solde actuel : <span id="solde">...</span> €</p>
+
+<form id="transactionForm">
+  <input type="hidden" id="transactionId">
+  <label for="nom">Nom :</label>
+  <input type="text" id="nom" required>
+  <label for="type">Type :</label>
+  <select id="type" required>
+    <option value="RECETTE">Recette</option>
+    <option value="DEPENSE">Dépense</option>
+  </select>
+  <label for="montant">Montant (€) :</label>
+  <input type="number" id="montant" required>
+  <button type="submit">Ajouter/Modifier</button>
+</form>
+
+<table>
+  <thead>
+  <tr>
+    <th>Nom</th>
+    <th>Type</th>
+    <th>Montant</th>
+    <th>Actions</th>
+  </tr>
+  </thead>
+  <tbody id="listeTransactions"></tbody>
+</table>
+
+<script>
+  const membresContainer = document.getElementById('membres-container');
+  const bureauForm = document.getElementById('bureauForm');
+  const transactionForm = document.getElementById('transactionForm');
+  const listeTransactions = document.getElementById('listeTransactions');
+  const soldeSpan = document.getElementById('solde');
+
+  // Rôles fixes
+  const roles = ["Président", "Vice-président", "Trésorier", "Secrétaire"];
+
+  async function chargerMembresEtBureau() {
+    const membresRes = await fetch('/api/membres');
+    const bureauRes = await fetch('/api/bureau');
+    const membres = await membresRes.json();
+    const bureau = await bureauRes.json();
+
+    membresContainer.innerHTML = "";
+    roles.forEach(role => {
+      const div = document.createElement('div');
+      const label = document.createElement('label');
+      label.textContent = role + " : ";
+      const select = document.createElement('select');
+      select.name = role;
+
+      const emptyOption = document.createElement("option");
+      emptyOption.value = "";
+      emptyOption.textContent = "-- Aucun --";
+      select.appendChild(emptyOption);
+
+      membres.forEach(m => {
+        const option = document.createElement("option");
+        option.value = m.id;
+        option.textContent = `${m.prenom} ${m.nom}`;
+        if (bureau[role] && bureau[role].id === m.id) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      });
+
+      div.appendChild(label);
+      div.appendChild(select);
+      membresContainer.appendChild(div);
+    });
+  }
+
+  bureauForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const payload = {};
+    roles.forEach(role => {
+      const select = bureauForm.querySelector(`select[name="${role}"]`);
+      const id = select.value;
+      if (id) {
+        payload[role] = parseInt(id);
+      }
+    });
+
+    await fetch('/api/bureau', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    alert("Bureau mis à jour !");
+  });
+
+  async function chargerTransactions() {
+    const res = await fetch('/api/transactions');
+    const transactions = await res.json();
+    listeTransactions.innerHTML = "";
+    transactions.forEach(t => {
+      const tr = document.createElement('tr');
+      const montantAffiche = t.type === "DEPENSE" ? `- ${Math.abs(t.montant)} €` : `${Math.abs(t.montant)} €`;
+      tr.innerHTML = `
+          <td>${t.nom}</td>
+          <td>${t.type}</td>
+          <td>${montantAffiche}</td>
+          <td>
+              <button onclick="modifierTransaction(${t.id}, '${t.nom}', '${t.type}', ${t.montant})">Modifier</button>
+              <button onclick="supprimerTransaction(${t.id})">Supprimer</button>
+          </td>
+      `;
+      listeTransactions.appendChild(tr);
+    });
+
+    const soldeRes = await fetch('/api/transactions/solde');
+    const solde = await soldeRes.text();
+    soldeSpan.textContent = parseFloat(solde).toFixed(2);
+  }
+
+  transactionForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('transactionId').value;
+    const nom = document.getElementById('nom').value;
+    const type = document.getElementById('type').value;
+    const montant = parseFloat(document.getElementById('montant').value);
+
+    const transaction = { nom, type, montant };
+    const url = id ? `/api/transactions/${id}` : '/api/transactions';
+    const method = id ? 'PUT' : 'POST';
+
+    await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(transaction)
+    });
+
+    transactionForm.reset();
+    chargerTransactions();
+  });
+
+  function modifierTransaction(id, nom, type, montant) {
+    document.getElementById('transactionId').value = id;
+    document.getElementById('nom').value = nom;
+    document.getElementById('type').value = type;
+    document.getElementById('montant').value = montant;
+  }
+
+  async function supprimerTransaction(id) {
+    await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
+    chargerTransactions();
+  }
+
+  chargerMembresEtBureau();
+  chargerTransactions();
+</script>
+
+</body>
+</html>
