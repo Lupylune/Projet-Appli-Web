@@ -20,6 +20,7 @@
         <th>Prénom</th>
         <th>Email</th>
         <th>Mot de passe</th>
+        <th>Role</th>
         <th>Actions</th>
     </tr>
     </thead>
@@ -43,8 +44,21 @@
     <button type="submit" class="button">Enregistrer</button>
 </form>
 
+<p id="erreur" style="color: red;"></p>
+
 <script>
+    //Admin protection
+    fetch("/api/admin")
+        .then(res => res.ok ? res.json() : null)
+        .then(admin => {
+            if (!admin) {
+                document.getElementById("navbar-logged-admin").style.display = "flex";
+            }
+        });
+
     let idModification = null;
+    const erreur = document.getElementById('erreur');
+    const passwordField = document.getElementById('password');
 
     async function chargerMembres() {
         const response = await fetch('/api/membres');
@@ -55,26 +69,33 @@
 
         data.forEach(membre => {
             const row = document.createElement('tr');
+            const actionCell = membre.admin
+                ? '<td></td>'
+                : `<td>
+                <button class="button"
+                        onclick="remplirFormulaire(${membre.id}, '${membre.nom}', '${membre.prenom}', '${membre.email}')">Modifier
+                </button>
+                <button class="button" onclick="supprimerMembre(${membre.id})">Supprimer</button>
+                </td>`;
+
             row.innerHTML = `
                 <td>${membre.nom}</td>
                 <td>${membre.prenom}</td>
                 <td>${membre.email}</td>
                 <td>${membre.password}</td>
-                <td>
-                    <button class="button" onclick="remplirFormulaire(${membre.id}, '${membre.nom}', '${membre.prenom}', '${membre.email}', '${membre.password}')">Modifier</button>
-                    <button class="button" onclick="supprimerMembre(${membre.id})">Supprimer</button>
-                </td>
+                <td>${membre.admin ? "Admin" : "User"}</td>
+                ${actionCell}
             `;
             tbody.appendChild(row);
         });
     }
 
-    function remplirFormulaire(id, nom, prenom, email, password) {
+    function remplirFormulaire(id, nom, prenom, email) {
         document.getElementById('nom').value = nom;
         document.getElementById('prenom').value = prenom;
         document.getElementById('email').value = email;
-        document.getElementById('password').value = password;
         idModification = id;
+        passwordField.required = false;
     }
 
     async function supprimerMembre(id) {
@@ -95,18 +116,33 @@
         };
 
         if (idModification) {
-            await fetch(`/api/membres/${idModification}`, {
+            const response = await fetch(`/api/membres/${idModification}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(membre)
             });
+            if (response.ok) {
+                erreur.textContent = "";
+            } else if (response.status === 409) {
+                erreur.textContent = "Un compte avec cet email existe déjà.";
+            } else {
+                erreur.textContent = "Une erreur est survenue.";
+            }
             idModification = null;
+            passwordField.required = true;
         } else {
-            await fetch('/api/membres', {
+            const response = await fetch('/api/membres/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(membre)
             });
+            if (response.ok) {
+                erreur.textContent = "";
+            } else if (response.status === 409) {
+                erreur.textContent = "Un compte avec cet email existe déjà.";
+            } else {
+                erreur.textContent = "Une erreur est survenue.";
+            }
         }
 
         e.target.reset();

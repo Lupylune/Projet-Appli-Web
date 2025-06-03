@@ -8,7 +8,9 @@
 <body>
 
 <header>
-    <img src="images/japan7.jpeg" alt="Logo Japan7" class="logo">
+    <a href="index.html">
+        <img src="images/japan7.jpeg" alt="Logo Japan7" class="logo">
+    </a>
 </header>
 
 <h1>📅 Liste des Événements</h1>
@@ -71,6 +73,15 @@
 </form>
 
 <script>
+    //Admin protection
+    fetch("/api/admin")
+        .then(res => res.ok ? res.json() : null)
+        .then(admin => {
+            if (!admin) {
+                document.getElementById("navbar-logged-admin").style.display = "flex";
+            }
+        });
+
     let idModification = null;
 
     async function chargerEvenements() {
