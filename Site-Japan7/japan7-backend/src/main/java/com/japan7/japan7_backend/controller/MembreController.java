@@ -25,6 +25,11 @@ public class MembreController {
         return repo.findAll();
     }
 
+    @GetMapping("/{id}")
+    public Optional<Membre> getMembreById(@PathVariable Long id) {
+        return repo.findById(id);
+    }
+
     @PostMapping
     public Membre create(@RequestBody Membre membre) {
 

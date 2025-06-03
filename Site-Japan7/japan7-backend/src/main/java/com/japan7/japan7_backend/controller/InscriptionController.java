@@ -52,7 +52,7 @@ public class InscriptionController {
                         i.getEvenement().getId().equals(evenement.getId()));
 
         if (dejaInscrit) {
-            return ResponseEntity.badRequest().body("Ce membre est déjà inscrit à cet événement.");
+            return ResponseEntity.badRequest().body("Vous êtes déjà inscrit à cet événement.");
         }
 
         Inscription inscription = new Inscription(membre, evenement);

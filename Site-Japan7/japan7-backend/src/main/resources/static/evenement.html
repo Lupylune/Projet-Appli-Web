@@ -13,11 +13,7 @@
 <div id="details-specifiques"></div>
 
 <h2>Inscription à cet événement</h2>
-<form id="form-inscription">
-    <input type="text" name="nom" placeholder="Votre nom" required>
-    <input type="email" name="email" placeholder="Votre email" required>
-    <button type="submit">S'inscrire</button>
-</form>
+<button id="boutton-inscription">S'inscrire</button>
 <p id="message-inscription"></p>
 
 <h2>Laisser un commentaire</h2>
@@ -80,10 +76,25 @@
             document.body.innerHTML = "<p>Erreur lors du chargement de l'événement.</p>";
         });
 
-    document.getElementById("form-inscription").addEventListener("submit", function (e) {
+    document.getElementById("boutton-inscription").addEventListener("click", async function (e) {
         e.preventDefault();
-        const nom = this.nom.value;
-        const email = this.email.value;
+
+        var membreId = null;
+        await fetch("/api/me")
+            .then(res => res.ok ? res.json() : null)
+            .then(user => {
+                if (user) {
+                    console.log(user);
+                    membreId = user;
+                } else {
+                    window.location.href = "login.html";
+                }
+            });
+        console.log(membreId);
+        const membreRes = await fetch(`/api/membres/${membreId}`);
+        const membre = await membreRes.json();
+        const nom = membre.nom;
+        const email = membre.email;
 
         fetch("http://localhost:8080/api/inscriptions", {
             method: "POST",
@@ -142,7 +153,7 @@
                 inscriptions.forEach(inscription => {
                     const m = inscription.membre;
                     const li = document.createElement("li");
-                    li.textContent = `${m.prenom} ${m.nom} (${m.email})`;
+                    li.textContent = `${m.prenom} ${m.nom}`;
                     liste.appendChild(li);
                 });
             });
