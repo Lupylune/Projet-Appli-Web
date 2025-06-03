@@ -38,6 +38,7 @@ public class Evenement {
 
     // Champs spécifiques pour les projections d'anime
     private String animeTitre;
+    @Lob
     private String animeSynopsis;
     private String animeImageUrl;
     private int episodeCourant;
