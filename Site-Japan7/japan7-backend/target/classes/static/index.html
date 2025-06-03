@@ -43,32 +43,6 @@
     <!-- Les cartes événements seront insérées ici par JS -->
 </div>
 
-<!-- Exemples fixes -->
-<h2>Exemples</h2>
-<div class="events-container">
-    <div class="event-card">
-        <img src="images/Blue-Lock.png" alt="Projection d'anime" />
-        <div class="event-content">
-            <h3>Projection d'anime</h3>
-            <p>えご.</p>
-        </div>
-    </div>
-    <div class="event-card">
-        <img src="images/karaoke.jpeg" alt="Soirée Karaoké" />
-        <div class="event-content">
-            <h3>Soirée Karaoké</h3>
-            <p>Chantez vos chansons préférées !</p>
-        </div>
-    </div>
-    <div class="event-card">
-        <img src="images/cooking.jpg" alt="Atelier cuisine" />
-        <div class="event-content">
-            <h3>Atelier cuisine</h3>
-            <p>Apprenez à faire des sushis.</p>
-        </div>
-    </div>
-</div>
-
 <footer>
     &copy; 2025 Club Japan7. Tous droits réservés.
 </footer>
@@ -106,61 +80,39 @@
 
     const container = document.getElementById('eventsContainer');
 
+
     fetch("/api/evenements")
         .then(res => res.ok ? res.json() : Promise.reject("Erreur chargement"))
         .then(events => {
             events.sort((a, b) => new Date(a.date) - new Date(b.date));
             events.forEach(event => {
-                const card = document.createElement('a');
-                card.href = `evenement.html?id=${event.id}`;
-                card.classList.add('event-card');
+                //Montrer seulement les événements futurs
+                if (new Date() < new Date(event.date)) {
+                    const card = document.createElement('a');
+                    card.href = `evenement.html?id=${event.id}`;
+                    card.classList.add('event-card');
 
-                const imageUrl = event.animeImageUrl || defaultImages[event.typeActivite] || "images/default.jpg";
+                    const imageUrl = event.animeImageUrl || defaultImages[event.typeActivite] || "images/default.jpg";
+                    const dateObj = new Date(event.date);
+                    const formattedDate = `${dateObj.toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                    })} ${dateObj.toLocaleTimeString("fr-FR", {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    })}`;
 
-                card.innerHTML = `
+                    card.innerHTML = `
                     <img src="${imageUrl}" alt="${event.titre}" />
                     <div class="event-content">
                         <h3>${event.titre}</h3>
-                        <p>${event.description}</p>
-                         <p><strong>${new Date(event.date).toLocaleString("fr-FR", {
-                            day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
-                            })}</strong></p>
+                        <p class="description">${event.description}</p>
+                        <p class="date">${formattedDate}</p>
                     </div>
                 `;
-                container.appendChild(card);
-            });
-        })
-        .catch(err => {
-            console.error(err);
-            // Events d'exemple en fallback
-            const fallbackEvents = [
-                {
-                    title: "Projection d'anime",
-                    description: "えご.",
-                    imageUrl: "images/Blue-Lock.png"
-                },
-                {
-                    title: "Soirée Karaoké",
-                    description: "Chantez vos chansons préférées !",
-                    imageUrl: "images/karaoke.jpeg"
-                },
-                {
-                    title: "Atelier cuisine",
-                    description: "Apprenez à faire des sushis.",
-                    imageUrl: "images/cooking.jpg"
+                    container.appendChild(card);
                 }
-            ];
-            fallbackEvents.forEach(event => {
-                const card = document.createElement('div');
-                card.classList.add('event-card');
-                card.innerHTML = `
-                    <img src="${event.imageUrl}" alt="${event.title}" />
-                    <div class="event-content">
-                        <h3>${event.title}</h3>
-                        <p>${event.description}</p>
-                    </div>
-                `;
-                container.appendChild(card);
             });
         });
 </script>
