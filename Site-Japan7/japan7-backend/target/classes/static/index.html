@@ -86,6 +86,7 @@
     fetch("/api/evenements")
         .then(res => res.ok ? res.json() : Promise.reject("Erreur chargement"))
         .then(events => {
+            console.log("Événements reçus :", events);
             events.sort((a, b) => {
                 const dateA = a.date ? new Date(a.date) : null;
                 const dateB = b.date ? new Date(b.date) : null;
