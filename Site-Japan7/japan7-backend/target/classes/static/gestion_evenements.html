@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Événements</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <a href="index.html">
+        <img src="images/japan7.jpeg" alt="Logo Japan7" class="logo">
+    </a>
+</header>
+
+<nav id="navbar-logged-admin">
+    <a href="index.html">Accueil</a>
+    <a href="gestion_evenements.html" class="active">Gestion des événements</a>
+    <a href="membres.html">Gestion des membres</a>
+    <a href="inscriptions.html">Inscriptions aux événements</a>
+    <a href="commentaires.html">Commentaires et avis</a>
+    <a href="ressources.html">Gestion des ressources</a>
+    <a href="admin.html">Gestion du club</a>
+    <a href="javascript:void(0)" onclick="logout()">Déconnexion</a>
+</nav>
+
+<h1>📅 Liste des Événements</h1>
+
+<table id="evenementsTable">
+    <thead>
+    <tr>
+        <th>Affiche</th>
+        <th>Titre</th>
+        <th>Description</th>
+        <th>Date</th>
+        <th>Lieu</th>
+        <th>Type</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<h2 id="formTitle">➕ Ajouter un événement</h2>
+<form id="formAjout">
+    <label for="titre">Titre :</label>
+    <input type="text" id="titre" maxlength="25" required>
+
+    <label for="description">Description :</label>
+    <textarea id="description"></textarea>
+
+    <label for="date">Date :</label>
+    <input type="datetime-local" id="date">
+
+    <label for="lieu">Lieu :</label>
+    <input type="text" id="lieu">
+
+    <label for="type">Type :</label>
+    <select id="type" required onchange="gererChampsSpecifiques()">
+        <option value="">-- Sélectionner --</option>
+        <option value="PROJECTION_ANIME">Projection d'anime</option>
+        <option value="KARAOKE">Karaoké</option>
+        <option value="ATELIER_CUISINE">Atelier cuisine</option>
+        <option value="COURS_JAPONAIS">Cours de japonais</option>
+    </select>
+
+    <div id="animeFields" style="display:none;">
+        <label for="animeSearch">🔍 Rechercher un anime :</label>
+        <input type="text" id="animeSearch" oninput="autoCompleterAnime()" autocomplete="off">
+        <ul id="suggestionsAnime" class="suggestions-list"></ul>
+
+        <label for="animeTitre">Titre de l'anime :</label>
+        <input type="text" id="animeTitre" readonly>
+
+        <label for="animeSynopsis">Synopsis :</label>
+        <textarea id="animeSynopsis" readonly></textarea>
+
+        <label for="animeImageUrl">Image (URL) :</label>
+        <input type="text" id="animeImageUrl" readonly>
+
+        <label for="episodeCourant">Épisode courant :</label>
+        <input type="number" id="episodeCourant" value="1" min="1">
+
+        <input type="hidden" id="animeMalId">
+    </div>
+
+    <button type="submit" class="button">Ajouter</button>
+</form>
+
+<script>
+    //Admin protection
+    fetch("/api/admin")
+        .then(res => res.ok ? res.json() : null)
+        .then(admin => {
+            if (!admin) {
+                window.location.href = "index.html";
+            }
+        });
+
+    function logout() {
+        fetch("/api/logout", { method: "POST" }).then(() => location.reload());
+    }
+
+    let idModification = null;
+
+    async function chargerEvenements() {
+        const response = await fetch('/api/evenements');
+        const data = await response.json();
+
+        const tbody = document.querySelector('#evenementsTable tbody');
+        tbody.innerHTML = '';
+
+        data.forEach(evt => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${evt.animeImageUrl ? `<img src="${evt.animeImageUrl}" alt="Anime" width="100">` : ''}</td>
+                <td>${evt.titre}</td>
+                <td>${evt.description}</td>
+                <td>${evt.date}</td>
+                <td>${evt.lieu}</td>
+                <td>
+                    ${evt.typeActivite}
+                    ${evt.typeActivite === 'PROJECTION_ANIME' ? `<br>🎞️ Épisode : ${evt.episodeCourant}` : ''}
+                </td>
+                <td>
+                    <button class="button" onclick='remplirFormulaire(${evt.id})'>Modifier</button>
+                    <button class="button" onclick="supprimerEvenement(${evt.id})">Supprimer</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    async function remplirFormulaire(id) {
+        const response = await fetch(`/api/evenements/${id}`);
+        const evt = await response.json();
+
+        document.getElementById('titre').value = evt.titre;
+        document.getElementById('description').value = evt.typeActivite === "PROJECTION_ANIME" ? "" : evt.description;
+        document.getElementById('date').value = evt.date.substring(0, 16)
+        document.getElementById('lieu').value = evt.lieu;
+        document.getElementById('type').value = evt.typeActivite;
+        document.querySelector('#formAjout button[type="submit"]').textContent = "Modifier";
+        document.getElementById('formTitle').textContent = "✏️ Modifier un événement";
+        gererChampsSpecifiques();
+
+        if (evt.typeActivite === "PROJECTION_ANIME") {
+            document.getElementById("animeTitre").value = evt.animeTitre || "";
+            document.getElementById("animeSynopsis").value = evt.animeSynopsis || "";
+            document.getElementById("animeImageUrl").value = evt.animeImageUrl || "";
+            document.getElementById("animeMalId").value = evt.animeMalId || "";
+            document.getElementById("episodeCourant").value = evt.episodeCourant || 1;
+            document.getElementById("animeSearch").value = evt.animeTitre || "";
+        }
+
+        idModification = id;
+    }
+
+    function gererChampsSpecifiques() {
+        const type = document.getElementById("type").value;
+        document.getElementById("animeFields").style.display = (type === "PROJECTION_ANIME") ? "contents" : "none";
+        document.getElementById("description").required = (type !== "PROJECTION_ANIME");
+    }
+
+    async function supprimerEvenement(id) {
+        if (confirm("Confirmer la suppression ?")) {
+            await fetch(`/api/evenements/${id}`, { method: 'DELETE' });
+            await chargerEvenements();
+        }
+    }
+
+    async function autoCompleterAnime() {
+        const query = document.getElementById("animeSearch").value;
+        const list = document.getElementById("suggestionsAnime");
+        list.innerHTML = '';
+
+        if (query.length < 3) return;
+
+        const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=5`);
+        const data = await res.json();
+
+        if (data.data) {
+            data.data.forEach(anime => {
+                const li = document.createElement("li");
+                li.textContent = anime.title;
+                li.onclick = () => selectionnerAnime(anime);
+                list.appendChild(li);
+            });
+        }
+    }
+
+    function selectionnerAnime(anime) {
+        document.getElementById("animeTitre").value = anime.title;
+        document.getElementById("animeSynopsis").value = anime.synopsis;
+        document.getElementById("animeImageUrl").value = anime.images.jpg.image_url;
+        document.getElementById("animeMalId").value = anime.mal_id;
+        document.getElementById("animeSearch").value = anime.title;
+        document.getElementById("suggestionsAnime").innerHTML = '';
+    }
+
+    document.getElementById('formAjout').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const type = document.getElementById("type").value;
+
+        const evenement = {
+            titre: document.getElementById("titre").value,
+            date: document.getElementById("date").value,
+            lieu: document.getElementById("lieu").value,
+            typeActivite: type
+        };
+
+        if (type === "PROJECTION_ANIME") {
+            evenement.animeTitre = document.getElementById("animeTitre").value;
+            evenement.animeSynopsis = document.getElementById("animeSynopsis").value;
+            evenement.animeImageUrl = document.getElementById("animeImageUrl").value;
+            evenement.episodeCourant = parseInt(document.getElementById("episodeCourant").value);
+            evenement.animeMalId = document.getElementById("animeMalId").value;
+        }
+        evenement.description = document.getElementById("description").value;
+
+        let url = "/api/evenements";
+        let method = "POST";
+
+        if (idModification !== null) {
+            url += `/${idModification}`;
+            method = "PUT";
+            evenement.id = idModification;
+        }
+
+        const res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(evenement)
+        });
+
+        if (res.ok) {
+            idModification = null;
+            e.target.reset();
+            document.querySelector('#formAjout button[type="submit"]').textContent = "Ajouter";
+            document.getElementById('formTitle').textContent = "➕ Ajouter un événement";
+            document.getElementById("animeFields").style.display = "none";
+            await chargerEvenements();
+        } else {
+            const err = await res.text();
+            alert("Erreur lors de l'enregistrement : " + err);
+        }
+    });
+
+    chargerEvenements();
+</script>
+
+</body>
+</html>

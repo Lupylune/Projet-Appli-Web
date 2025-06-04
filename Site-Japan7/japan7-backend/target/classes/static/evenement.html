@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Événement</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <a href="index.html">
+        <img src="images/japan7.jpeg" alt="Logo Japan7" class="logo">
+    </a>
+</header>
+
+<!-- Menus -->
+<nav id="navbar-logged-admin" style="display: none;">
+    <a href="index.html" class="active">Accueil</a>
+    <a href="gestion_evenements.html">Gestion des événements</a>
+    <a href="membres.html">Gestion des membres</a>
+    <a href="inscriptions.html">Inscriptions aux événements</a>
+    <a href="commentaires.html">Commentaires et avis</a>
+    <a href="ressources.html">Gestion des ressources</a>
+    <a href="admin.html">Gestion du club</a>
+    <a href="javascript:void(0)" onclick="logout()">Déconnexion</a>
+</nav>
+
+<nav id="navbar-logged-in" style="display: none;">
+    <a href="index.html" class="active">Accueil</a>
+    <a href="javascript:void(0)" onclick="logout()">Déconnexion</a>
+</nav>
+
+<nav id="navbar-logged-off" style="display: none;">
+    <a href="index.html" class="active">Accueil</a>
+    <a href="login.html">Connexion</a>
+    <a href="register.html">Inscription</a>
+</nav>
+
+<div class="evenement-container">
+    <h1 id="titre" class="titre-centre"></h1>
+    <p id="description"></p>
+    <p><strong>Date :</strong> <span id="date"></span></p>
+    <p><strong>Lieu :</strong> <span id="lieu"></span></p>
+    <div id="details-specifiques"></div>
+    <div class="button-wrapper">
+        <button id="boutton-inscription">S'inscrire</button>
+    </div>
+</div>
+
+<h2>Laisser un commentaire</h2>
+<form id="form-commentaire">
+    <textarea name="contenu" placeholder="Votre commentaire" required></textarea>
+    <button type="submit">Envoyer</button>
+</form>
+<p id="message-commentaire"></p>
+
+<h2>Commentaires :</h2>
+<ul id="liste-commentaires"></ul>
+
+<h2 id="liste-inscrits-title">Liste des inscrits :</h2>
+<ul class="liste-inscrits" id="liste-inscrits"></ul>
+
+<script>
+    // Affiche les menus selon l'état de connexion
+    fetch("/api/me")
+        .then(res => res.ok ? res.json() : null)
+        .then(user => {
+            if (user) {
+                fetch("/api/admin")
+                    .then(res => res.ok ? res.json() : null)
+                    .then(admin => {
+                        if (admin) {
+                            document.getElementById("navbar-logged-admin").style.display = "flex";
+                        } else {
+                            document.getElementById("navbar-logged-in").style.display = "flex";
+                        }
+                    });
+            } else {
+                document.getElementById("navbar-logged-off").style.display = "flex";
+            }
+        });
+
+
+    var dejaInscript = false;
+    var membreId = null;
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    checkInscription();
+
+    function checkInscription() {
+        fetch("/api/me")
+            .then(res => res.ok ? res.json() : null)
+            .then(user => {
+                if (!user) {
+                    document.getElementById("boutton-inscription").textContent = "Se connecter";
+
+                    // Hide the comment form
+                    document.getElementById("form-commentaire").style.display = "none";
+
+                    // Create a "Se connecter" button
+                    const loginButton = document.createElement("button");
+                    loginButton.textContent = "Se connecter pour commenter";
+                    loginButton.addEventListener("click", () => {
+                        window.location.href = "login.html";
+                    });
+
+                    // Add the button after the form
+                    document.getElementById("form-commentaire").after(loginButton);
+                } else {
+                    membreId = user;
+                    fetch(`/api/inscriptions/check?membreId=${membreId}&evenementId=${id}`)
+                        .then(res => res.json())
+                        .then(isInscrit => {
+                            if (isInscrit) {
+                                document.getElementById("boutton-inscription").textContent = "Se désinscrire";
+                                dejaInscript = true;
+                            }
+                        });
+                }
+            });
+    }
+    function logout() {
+        fetch("/api/logout", { method: "POST" }).then(() => location.reload());
+    }
+
+    fetch(`/api/evenements/${id}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+            if (!data) {
+                document.body.innerHTML = "<p>Erreur : Événement introuvable.</p>";
+                return;
+            }
+
+            const evenement = data;
+            document.getElementById("titre").textContent = evenement.titre;
+            document.getElementById("description").innerHTML = evenement.description.replace(/\n/g, "<br>");
+            if (evenement.date) {
+                const dateObj = new Date(evenement.date);
+                const formattedDate = `${dateObj.toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                })} ${dateObj.toLocaleTimeString("fr-FR", {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                })}`;
+                document.getElementById("date").textContent = formattedDate;
+            } else {
+                document.getElementById("date").textContent =  "Non précisée";
+            }
+            if (evenement.lieu) {
+                document.getElementById("lieu").textContent = evenement.lieu;
+            } else {
+                document.getElementById("lieu").textContent = "Non précisée";
+            }
+
+            const details = document.getElementById("details-specifiques");
+            switch (evenement.typeActivite) {
+                case "PROJECTION_ANIME":
+                    details.innerHTML = `
+                        <h3>${evenement.animeTitre}</h3>
+                        <img src="${evenement.animeImageUrl}" alt="Image anime" width="200">
+                        <p><strong>Synopsis :</strong> ${evenement.animeSynopsis}</p>
+                        <p><strong>Episode :</strong> ${evenement.episodeCourant}</p>
+                    `;
+                    break;
+                // case "KARAOKE":
+                //     details.innerHTML = `
+                //         <p><strong>Chanson :</strong> ${evenement.chansonTitre} - ${evenement.chansonArtiste}</p>
+                //         <a href="${evenement.chansonSpotifyUrl}" target="_blank">Écouter sur Spotify</a>
+                //     `;
+                //     break;
+                // default:
+                //     details.innerHTML = "<p>Aucun détail spécifique pour ce type d'événement.</p>";
+            }
+
+            chargerCommentaires();
+            chargerInscriptions();
+        })
+        .catch(err => {
+            console.error(err);
+            document.body.innerHTML = "<p>Erreur lors du chargement de l'événement.</p>";
+        });
+
+    document.getElementById("boutton-inscription").addEventListener("click", async function (e) {
+        e.preventDefault();
+
+        if (membreId == null) {
+            window.location.href = "login.html";
+        }
+        const membreRes = await fetch(`/api/membres/${membreId}`);
+        const membre = await membreRes.json();
+        const nom = membre.nom;
+        const email = membre.email;
+
+        if (!dejaInscript) {
+            fetch("/api/inscriptions", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({nom, email, evenementId: id})
+            })
+                .then(res => res.ok ? res.text() : res.text().then(msg => {
+                    throw new Error(msg);
+                }))
+                .then(msg => {
+                    alert(msg);
+                    document.getElementById("boutton-inscription").textContent = "Se désinscrire";
+                    dejaInscript = true;
+                    chargerInscriptions();
+                })
+                .catch(err => {
+                    document.getElementById("message-inscription").textContent = "Erreur : " + err.message;
+                });
+        } else {
+            await fetch(`/api/inscriptions?membreId=${membreId}&evenementId=${id}`, {
+                method: "DELETE"
+            });
+            alert("Désinscrition enregistrée");
+            document.getElementById("boutton-inscription").textContent = "S'inscrire";
+            dejaInscript = false;
+            chargerInscriptions();
+        }
+    });
+
+    document.getElementById("form-commentaire").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const contenu = this.contenu.value;
+
+        if (membreId == null) {
+            window.location.href = "login.html";
+        }
+
+        fetch("/api/commentaires", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ auteur: membreId, contenu, evenementId: id })
+        })
+            .then(res => res.ok ? "Commentaire ajouté !" : "Erreur lors de l'envoi.")
+            .then(msg => {
+                document.getElementById("message-commentaire").textContent = msg;
+                chargerCommentaires();
+            })
+            .catch(() => document.getElementById("message-commentaire").textContent = "Erreur réseau.");
+        this.reset();
+    });
+
+    function chargerCommentaires() {
+        fetch(`/api/commentaires/evenement/${id}`)
+            .then(res => res.json())
+            .then(commentaires => {
+                const liste = document.getElementById("liste-commentaires");
+                liste.innerHTML = "";
+                commentaires.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                if (commentaires.length == 0) {
+                    const li = document.createElement("li");
+                    li.id = "list-empty"
+                    li.textContent = "Aucun commentaire"
+                    liste.appendChild(li);
+                }
+                commentaires.forEach(c => {
+                    const li = document.createElement("li");
+                    li.className = "comment"
+
+                    const div = document.createElement("div");
+                    div.className = "comment-header";
+
+                    const span1 =  document.createElement("span");
+                    span1.textContent = `${c.auteur.prenom} ${c.auteur.nom}`;
+                    span1.className = "comment-name"
+
+                    const dateObj = new Date(c.date);
+                    const formattedDate = `${dateObj.toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                    })} ${dateObj.toLocaleTimeString("fr-FR", {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    })}`;
+
+                    const span2 =  document.createElement("span");
+                    span2.textContent = formattedDate;
+                    span2.className = "comment-date"
+
+                    div.appendChild(span1);
+                    div.appendChild(span2);
+
+                    const p =  document.createElement("p");
+                    p.textContent = `${c.contenu}`;
+                    p.className = "comment-content";
+
+                    li.appendChild(div);
+                    li.appendChild(p);
+
+                    liste.appendChild(li);
+                });
+            });
+    }
+
+    function chargerInscriptions() {
+        fetch(`/api/inscriptions/evenement/${id}`)
+            .then(res => res.json())
+            .then(inscriptions => {
+                const liste = document.getElementById("liste-inscrits");
+                liste.innerHTML = "";
+                if (inscriptions.length == 0) {
+                    const li = document.createElement("li");
+                    li.id = "list-empty"
+                    li.textContent = "Aucun inscrit";
+                    liste.appendChild(li);
+                }
+                inscriptions.forEach(inscription => {
+                    const m = inscription.membre;
+                    const li = document.createElement("li");
+                    li.textContent = `${m.prenom} ${m.nom}`;
+                    liste.appendChild(li);
+                });
+            });
+    }
+</script>
+</body>
+</html>
