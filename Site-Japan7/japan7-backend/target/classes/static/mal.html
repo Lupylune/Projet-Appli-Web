@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste animes</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html">
+    <img src="images/japan7.jpeg" alt="Logo Japan7" class="logo">
+  </a>
+</header>
+
+<nav id="navbar-logged-in">
+    <a href="index.html">Accueil</a>
+    <a href="mal.html" class="active">Liste d'anime</a>
+    <a href="javascript:void(0)" onclick="logout()">Déconnexion</a>
+</nav>
+
+<h1>📊 Liste des Animes</h1>
+
+<table id="evenementsTable">
+  <thead>
+  <tr>
+    <th>Affiche</th>
+    <th>Titre</th>
+    <th>Episodes</th>
+  </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+    (async function () {
+        var membreId = null;
+        //Login protection
+        await fetch("/api/me")
+            .then(res => res.ok ? res.json() : null)
+            .then(membre => {
+                if (!membre) {
+                    window.location.href = "index" +
+                        ".html";
+                } else {
+                    membreId = membre;
+                }
+            });
+        console.log(membreId);
+        await fetch(`/api/inscriptions/membre/${membreId}`)
+            .then(res => res.ok ? res.json() : Promise.reject("Erreur chargement"))
+            .then(events => {
+                console.log(events);
+                events.forEach(e => {
+                    console.log(e.evenement?.date);
+                });
+                console.log(new Date());
+                const projections = events.filter(e => e.evenement?.typeActivite === "PROJECTION_ANIME" && new Date(e.evenement?.date) < new Date());
+                console.log(projections);
+                const latestMap = new Map();
+                projections.forEach(e => {
+                    const current = latestMap.get(e.evenement?.animeTitre);
+                    if (!current || (e.evenement?.episodeCourant || 0) > (current.evenement?.episodeCourant || 0)) {
+                        latestMap.set(e.evenement?.animeTitre, e);
+                    }
+                });
+                console.log(latestMap);
+                latestMap.forEach(evt => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                <td>${evt.evenement?.animeImageUrl ? `<img src="${evt.evenement?.animeImageUrl}" alt="Anime" width="100">` : ''}</td>
+                <td>${evt.evenement?.animeTitre}</td>
+                <td>${evt.evenement?.episodeCourant + evt.evenement?.nombreEpisode - 1}/${evt.evenement?.episodeMax}</td>`;
+                    const tbody = document.querySelector('#evenementsTable tbody');
+                    tbody.appendChild(row);
+                });
+            });
+    })();
+</script>
+</body>
+</html>
