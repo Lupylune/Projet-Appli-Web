@@ -138,6 +138,12 @@ p {
     text-overflow: unset;
 }
 
+.suggestions-container {
+    position: relative;
+    display: inline-block;
+    width: 300px;
+}
+
 .suggestions-list {
     list-style-type: none;
     padding: 0;
@@ -148,7 +154,8 @@ p {
     position: absolute;
     background: white;
     z-index: 1000;
-    width: 300px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .suggestions-list li {

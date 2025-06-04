@@ -66,8 +66,10 @@
 
     <div id="animeFields" style="display:none;">
         <label for="animeSearch">🔍 Rechercher un anime :</label>
-        <input type="text" id="animeSearch" oninput="autoCompleterAnime()" autocomplete="off">
-        <ul id="suggestionsAnime" class="suggestions-list"></ul>
+        <div class="suggestions-container">
+            <input type="text" id="animeSearch" oninput="autoCompleterAnime()" autocomplete="off">
+            <ul id="suggestionsAnime" class="suggestions-list"></ul>
+        </div>
 
         <label for="animeTitre">Titre de l'anime :</label>
         <input type="text" id="animeTitre" readonly>
