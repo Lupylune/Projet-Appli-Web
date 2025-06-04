@@ -85,7 +85,16 @@
     fetch("/api/evenements")
         .then(res => res.ok ? res.json() : Promise.reject("Erreur chargement"))
         .then(events => {
-            events.sort((a, b) => new Date(a.date) - new Date(b.date));
+            events.sort((a, b) => {
+                const dateA = a.date ? new Date(a.date) : null;
+                const dateB = b.date ? new Date(b.date) : null;
+
+                if (!dateA && !dateB) return 0;       // les deux sans date → égaux
+                if (!dateA) return 1;                 // a sans date → va après b
+                if (!dateB) return -1;                // b sans date → va après a
+
+                return dateA - dateB;                 // les deux ont des dates → tri normal
+            });
             events.forEach(event => {
                 //Montrer seulement les événements futurs
                 if (!event.date || new Date() < new Date(event.date)) {
