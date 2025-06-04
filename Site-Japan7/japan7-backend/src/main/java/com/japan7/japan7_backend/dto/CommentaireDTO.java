@@ -1,12 +1,13 @@
 package com.japan7.japan7_backend.dto;
 
 import com.japan7.japan7_backend.model.Commentaire;
+import com.japan7.japan7_backend.model.Membre;
 
 import java.time.LocalDateTime;
 
 public class CommentaireDTO {
     public Long id;
-    public String auteur;
+    public Membre auteur;
     public String contenu;
     public LocalDateTime date;
     public Long evenementId;

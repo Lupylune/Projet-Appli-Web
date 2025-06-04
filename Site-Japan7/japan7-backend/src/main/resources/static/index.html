@@ -88,21 +88,24 @@
             events.sort((a, b) => new Date(a.date) - new Date(b.date));
             events.forEach(event => {
                 //Montrer seulement les événements futurs
-                if (new Date() < new Date(event.date)) {
+                if (!event.date || new Date() < new Date(event.date)) {
                     const card = document.createElement('a');
                     card.href = `evenement.html?id=${event.id}`;
                     card.classList.add('event-card');
 
                     const imageUrl = event.animeImageUrl || defaultImages[event.typeActivite] || "images/default.jpg";
-                    const dateObj = new Date(event.date);
-                    const formattedDate = `${dateObj.toLocaleDateString("fr-FR", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric"
-                    })} ${dateObj.toLocaleTimeString("fr-FR", {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                    })}`;
+                    var formattedDate = "";
+                    if (event.date) {
+                        const dateObj = new Date(event.date);
+                        formattedDate = `${dateObj.toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric"
+                        })} ${dateObj.toLocaleTimeString("fr-FR", {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        })}`;
+                    }
 
                     card.innerHTML = `
                     <img src="${imageUrl}" alt="${event.titre}" />

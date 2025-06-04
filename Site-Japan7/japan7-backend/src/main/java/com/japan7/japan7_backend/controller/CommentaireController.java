@@ -3,8 +3,10 @@ package com.japan7.japan7_backend.controller;
 import com.japan7.japan7_backend.dto.CommentaireDTO;
 import com.japan7.japan7_backend.model.Commentaire;
 import com.japan7.japan7_backend.model.Evenement;
+import com.japan7.japan7_backend.model.Membre;
 import com.japan7.japan7_backend.repository.CommentaireRepository;
 import com.japan7.japan7_backend.repository.EvenementRepository;
+import com.japan7.japan7_backend.repository.MembreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,9 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/commentaires")
 @CrossOrigin(origins = "*")
 public class CommentaireController {
+
+    @Autowired
+    private MembreRepository membreRepo;
 
     @Autowired
     private CommentaireRepository commentaireRepository;
@@ -40,7 +45,8 @@ public class CommentaireController {
 
     @PostMapping
     public ResponseEntity<?> ajouterCommentaire(@RequestBody Map<String, Object> payload) {
-        String auteur = (String) payload.get("auteur");
+        Long membreId = Long.valueOf(String.valueOf(payload.get("auteur")));
+        Membre membre = membreRepo.findById(membreId).get();
         String contenu = (String) payload.get("contenu");
         Long evenementId = Long.valueOf(payload.get("evenementId").toString());
 
@@ -50,7 +56,7 @@ public class CommentaireController {
         }
 
         Commentaire commentaire = new Commentaire();
-        commentaire.setAuteur(auteur);
+        commentaire.setAuteur(membre);
         commentaire.setContenu(contenu);
         commentaire.setDate(LocalDateTime.now());
         commentaire.setEvenement(evenement);
@@ -60,14 +66,18 @@ public class CommentaireController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> modifierCommentaire(@PathVariable Long id, @RequestBody CommentaireDTO dto) {
+    public ResponseEntity<String> modifierCommentaire(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
+        Long membreId = Long.valueOf((String.valueOf(payload.get("auteur"))));
+        Membre membre = membreRepo.findById(membreId).get();
+        String contenu = (String) payload.get("contenu");
+        Long evenementId = Long.valueOf((String) payload.get("evenementId"));
         return commentaireRepository.findById(id)
                 .map(commentaire -> {
-                    commentaire.setAuteur(dto.auteur);
-                    commentaire.setContenu(dto.contenu);
+                    commentaire.setAuteur(membre);
+                    commentaire.setContenu(contenu);
                     commentaire.setDate(LocalDateTime.now());
 
-                    Evenement evenement = evenementRepository.findById(dto.evenementId).orElse(null);
+                    Evenement evenement = evenementRepository.findById(evenementId).orElse(null);
                     if (evenement == null) {
                         return ResponseEntity.badRequest().body("Événement introuvable.");
                     }

@@ -10,7 +10,9 @@ public class Commentaire {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String auteur;
+    @ManyToOne
+    @JoinColumn(name = "auteur_id")
+    private Membre auteur;
     private String contenu;
     private LocalDateTime date;
 
@@ -26,11 +28,11 @@ public class Commentaire {
         this.id = id;
     }
 
-    public String getAuteur() {
+    public Membre getAuteur() {
         return auteur;
     }
 
-    public void setAuteur(String auteur) {
+    public void setAuteur(Membre auteur) {
         this.auteur = auteur;
     }
 

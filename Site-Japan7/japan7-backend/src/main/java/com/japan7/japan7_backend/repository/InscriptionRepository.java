@@ -6,6 +6,10 @@ import java.util.List;
 
 public interface InscriptionRepository extends JpaRepository<Inscription, Long> {
     List<Inscription> findByEvenementId(Long evenementId);
+
+    boolean existsByMembreIdAndEvenementId(Long membreId, Long evenementId);
+
+    void deleteByMembreIdAndEvenementId(Long membreId, Long evenementId);
 }
 
 

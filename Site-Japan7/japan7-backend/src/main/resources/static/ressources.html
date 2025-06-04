@@ -13,6 +13,17 @@
     </a>
 </header>
 
+<nav id="navbar-logged-admin">
+    <a href="index.html">Accueil</a>
+    <a href="gestion_evenements.html">Gestion des événements</a>
+    <a href="membres.html">Gestion des membres</a>
+    <a href="inscriptions.html">Inscriptions aux événements</a>
+    <a href="commentaires.html">Commentaires et avis</a>
+    <a href="ressources.html" class="active">Gestion des ressources</a>
+    <a href="admin.html">Gestion du club</a>
+    <a href="javascript:void(0)" onclick="logout()">Déconnexion</a>
+</nav>
+
 <h1>📦 Gestion des ressources</h1>
 
 <form id="ressourceForm">
@@ -48,9 +59,13 @@
         .then(res => res.ok ? res.json() : null)
         .then(admin => {
             if (!admin) {
-                document.getElementById("navbar-logged-admin").style.display = "flex";
+                window.location.href = "index.html";
             }
         });
+
+    function logout() {
+        fetch("/api/logout", { method: "POST" }).then(() => location.reload());
+    }
 
     const apiBase = "/api/ressources";
 

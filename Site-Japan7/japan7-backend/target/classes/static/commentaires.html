@@ -13,13 +13,24 @@
     </a>
 </header>
 
+<nav id="navbar-logged-admin">
+    <a href="index.html">Accueil</a>
+    <a href="gestion_evenements.html">Gestion des événements</a>
+    <a href="membres.html">Gestion des membres</a>
+    <a href="inscriptions.html">Inscriptions aux événements</a>
+    <a href="commentaires.html" class="active">Commentaires et avis</a>
+    <a href="ressources.html">Gestion des ressources</a>
+    <a href="admin.html">Gestion du club</a>
+    <a href="javascript:void(0)" onclick="logout()">Déconnexion</a>
+</nav>
+
 <h1>Commentaires et avis</h1>
 
 <form id="commentaireForm">
     <input type="hidden" id="commentaireId">
 
     <label for="auteur">Auteur :</label>
-    <input type="text" id="auteur" required>
+    <select id="auteur" required></select>
 
     <label for="contenu">Contenu :</label>
     <textarea id="contenu" required></textarea>
@@ -45,8 +56,22 @@
 </table>
 
 <script>
+    //Admin protection
+    fetch("/api/admin")
+        .then(res => res.ok ? res.json() : null)
+        .then(admin => {
+            if (!admin) {
+                window.location.href = "index.html";
+            }
+        });
+
+    function logout() {
+        fetch("/api/logout", { method: "POST" }).then(() => location.reload());
+    }
+
     const commentaireForm = document.getElementById('commentaireForm');
     const listeCommentaires = document.getElementById('listeCommentaires');
+    const auteurSelect = document.getElementById('auteur');
     const evenementSelect = document.getElementById('evenement');
 
     async function chargerEvenements() {
@@ -60,6 +85,17 @@
         });
     }
 
+    async function chargerAuteurs() {
+        const res = await fetch('/api/membres');
+        const membres = await res.json();
+        membres.forEach(m => {
+            const option = document.createElement('option');
+            option.value = m.id;
+            option.textContent = m.prenom + " " + m.nom;
+            auteurSelect.appendChild(option);
+        });
+    }
+
     async function chargerCommentaires() {
         const res = await fetch('/api/commentaires');
         const commentaires = await res.json();
@@ -67,12 +103,12 @@
         commentaires.forEach(c => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${c.auteur}</td>
+                <td>${c.auteur.nom + ' ' + c.auteur.prenom}</td>
                 <td>${c.contenu}</td>
                 <td>${c.date ? c.date.replace('T', ' ').substring(0, 16) : ''}</td>
                 <td>${c.evenementTitre}</td>
                 <td>
-                    <button class="button" onclick="modifierCommentaire(${c.id}, '${c.auteur}', '${c.contenu}', ${c.evenementId})">
+                    <button class="button" onclick="modifierCommentaire(${c.id}, '${c.auteur.id}', '${c.contenu}', ${c.evenementId})">Modifier</button>
                     <button class="button" onclick="supprimerCommentaire(${c.id})">Supprimer</button>
                 </td>
             `;
@@ -114,6 +150,7 @@
         chargerCommentaires();
     }
 
+    chargerAuteurs();
     chargerEvenements();
     chargerCommentaires();
 </script>

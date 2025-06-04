@@ -27,6 +27,7 @@ public class Evenement {
     private String description;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime date;
+    private String lieu;
 
     @Enumerated(EnumType.STRING)
     private TypeEvenement typeActivite;
@@ -53,9 +54,30 @@ public class Evenement {
 
     public Evenement() {}
 
+    public Evenement(String titre, String description, TypeEvenement typeActivite) {
+        this.titre = titre;
+        this.description = description;
+        this.typeActivite = typeActivite;
+    }
+
     public Evenement(String titre, String description, LocalDateTime date, TypeEvenement typeActivite) {
         this.titre = titre;
         this.description = description;
+        this.date = date;
+        this.typeActivite = typeActivite;
+    }
+
+    public Evenement(String titre, String description, String lieu, TypeEvenement typeActivite) {
+        this.titre = titre;
+        this.description = description;
+        this.lieu = lieu;
+        this.typeActivite = typeActivite;
+    }
+
+    public Evenement(String titre, String description, String lieu, LocalDateTime date, TypeEvenement typeActivite) {
+        this.titre = titre;
+        this.description = description;
+        this.lieu = lieu;
         this.date = date;
         this.typeActivite = typeActivite;
     }
@@ -106,4 +128,12 @@ public class Evenement {
 
     public String getChansonSpotifyUrl() { return chansonSpotifyUrl; }
     public void setChansonSpotifyUrl(String chansonSpotifyUrl) { this.chansonSpotifyUrl = chansonSpotifyUrl; }
+
+    public String getLieu() {
+        return lieu;
+    }
+
+    public void setLieu(String lieu) {
+        this.lieu = lieu;
+    }
 }

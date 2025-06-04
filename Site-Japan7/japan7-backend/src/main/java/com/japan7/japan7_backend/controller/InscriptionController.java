@@ -8,6 +8,7 @@ import com.japan7.japan7_backend.repository.EvenementRepository;
 import com.japan7.japan7_backend.repository.InscriptionRepository;
 import com.japan7.japan7_backend.repository.MembreRepository;
 
+import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +33,11 @@ public class InscriptionController {
     @GetMapping
     public List<Inscription> getAll() {
         return repo.findAll();
+    }
+
+    @GetMapping("/check")
+    public boolean isInscrit(@RequestParam Long membreId, @RequestParam Long evenementId) {
+        return repo.existsByMembreIdAndEvenementId(membreId, evenementId);
     }
 
     @PostMapping
@@ -64,6 +70,15 @@ public class InscriptionController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         repo.deleteById(id);
+    }
+
+    @DeleteMapping
+    @Transactional
+    public void deleteInscription(
+            @RequestParam Long membreId,
+            @RequestParam Long evenementId) {
+        System.out.println("DeleteInscription");
+        repo.deleteByMembreIdAndEvenementId(membreId, evenementId);
     }
 
     @GetMapping("/evenement/{evenementId}")
