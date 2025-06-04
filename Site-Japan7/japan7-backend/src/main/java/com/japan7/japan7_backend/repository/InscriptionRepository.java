@@ -10,6 +10,8 @@ public interface InscriptionRepository extends JpaRepository<Inscription, Long> 
     boolean existsByMembreIdAndEvenementId(Long membreId, Long evenementId);
 
     void deleteByMembreIdAndEvenementId(Long membreId, Long evenementId);
+
+    List<Inscription> findByMembreId(Long membreId);
 }
 
 

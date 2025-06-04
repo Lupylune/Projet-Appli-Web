@@ -86,4 +86,9 @@ public class InscriptionController {
         return repo.findByEvenementId(evenementId);
     }
 
+    @GetMapping("/membre/{membreId}")
+    public List<Inscription> getInscriptionsParMembre(@PathVariable Long membreId) {
+        return repo.findByMembreId(membreId);
+    }
+
 }

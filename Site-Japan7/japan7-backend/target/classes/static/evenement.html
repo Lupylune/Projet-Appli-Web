@@ -28,6 +28,7 @@
 
 <nav id="navbar-logged-in" style="display: none;">
     <a href="index.html" class="active">Accueil</a>
+    <a href="mal.html">Liste d'anime</a>
     <a href="javascript:void(0)" onclick="logout()">Déconnexion</a>
 </nav>
 
@@ -158,11 +159,18 @@
             const details = document.getElementById("details-specifiques");
             switch (evenement.typeActivite) {
                 case "PROJECTION_ANIME":
+                    const current = evenement.episodeCourant;
+                    const total = evenement.nombreEpisode;
+                    console.log(current);
+                    console.log(total);
+                    const episodesText = (current && total)
+                        ? Array.from({ length: total }, (_, i) => current + i).join(" - ")
+                        : current || "Non précisé";
                     details.innerHTML = `
                         <h3>${evenement.animeTitre}</h3>
                         <img src="${evenement.animeImageUrl}" alt="Image anime" width="200">
                         <p><strong>Synopsis :</strong> ${evenement.animeSynopsis}</p>
-                        <p><strong>Episode :</strong> ${evenement.episodeCourant}</p>
+                        <p><strong>Episode :</strong> ${episodesText}</p>
                     `;
                     break;
                 // case "KARAOKE":

@@ -24,19 +24,7 @@
     <a href="javascript:void(0)" onclick="logout()">Déconnexion</a>
 </nav>
 
-<h1>📋 Inscriptions aux événements</h1>
-
-<form id="formInscription">
-    <label for="membreSelect">Membre :</label>
-    <select id="membreSelect" required></select>
-
-    <label for="evenementSelect">Événement :</label>
-    <select id="evenementSelect" required></select>
-
-    <button type="submit" class="button">Inscrire</button>
-</form>
-
-<h2>👥 Inscriptions existantes</h2>
+<h1>👥 Inscriptions existantes</h1>
 <table id="inscriptionsTable">
     <thead>
     <tr>
@@ -98,18 +86,6 @@
             await chargerInscriptions();
         }
     }
-
-    document.getElementById('formInscription').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const membreId = document.getElementById('membreSelect').value;
-        const evenementId = document.getElementById('evenementSelect').value;
-
-        await fetch(`/api/inscriptions?membreId=${membreId}&evenementId=${evenementId}`, {
-            method: 'POST'
-        });
-
-        await chargerInscriptions();
-    });
 
     chargerSelects();
     chargerInscriptions();

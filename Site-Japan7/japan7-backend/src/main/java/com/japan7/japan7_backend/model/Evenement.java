@@ -10,6 +10,22 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 @Entity
 public class Evenement {
 
+    public Long getNombreEpisode() {
+        return nombreEpisode;
+    }
+
+    public void setNombreEpisode(Long nombreEpisode) {
+        this.nombreEpisode = nombreEpisode;
+    }
+
+    public Long getEpisodeMax() {
+        return episodeMax;
+    }
+
+    public void setEpisodeMax(Long episodeMax) {
+        this.episodeMax = episodeMax;
+    }
+
     public enum TypeEvenement {
         PROJECTION_ANIME,
         KARAOKE,
@@ -32,11 +48,11 @@ public class Evenement {
     @Enumerated(EnumType.STRING)
     private TypeEvenement typeActivite;
 
-    @OneToMany(mappedBy = "evenement", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "evenement", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Inscription> inscriptions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "evenement", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "evenement", cascade = CascadeType.ALL)
     private List<Ressource> ressources = new ArrayList<>();
 
     // Champs spécifiques pour les projections d'anime
@@ -45,6 +61,10 @@ public class Evenement {
     private String animeSynopsis;
     private String animeImageUrl;
     private int episodeCourant;
+    @Column(nullable = true)
+    private Long nombreEpisode;
+    @Column(nullable = true)
+    private Long episodeMax;
     private String animeMalId;
 
     // Champs spécifiques pour les karaokés

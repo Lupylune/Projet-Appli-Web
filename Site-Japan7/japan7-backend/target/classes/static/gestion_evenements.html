@@ -83,6 +83,11 @@
         <label for="episodeCourant">Épisode courant :</label>
         <input type="number" id="episodeCourant" value="1" min="1">
 
+        <label for="nombreEpisode">Nombre d'épisodes :</label>
+        <input type="number" id="nombreEpisode" value="1" min="1">
+
+        <input type="hidden" id="episodeMax">
+
         <input type="hidden" id="animeMalId">
     </div>
 
@@ -122,7 +127,7 @@
                 <td>${evt.lieu}</td>
                 <td>
                     ${evt.typeActivite}
-                    ${evt.typeActivite === 'PROJECTION_ANIME' ? `<br>🎞️ Épisode : ${evt.episodeCourant}` : ''}
+                    ${evt.typeActivite === 'PROJECTION_ANIME' ? `<br>🎞️ Épisode : ${evt.episodeCourant} (${evt.nombreEpisode})` : ''}
                 </td>
                 <td>
                     <button class="button" onclick='remplirFormulaire(${evt.id})'>Modifier</button>
@@ -152,6 +157,8 @@
             document.getElementById("animeImageUrl").value = evt.animeImageUrl || "";
             document.getElementById("animeMalId").value = evt.animeMalId || "";
             document.getElementById("episodeCourant").value = evt.episodeCourant || 1;
+            document.getElementById("episodeMax").value = evt.episodeMax || 0;
+            document.getElementById("nombreEpisode").value = evt.nombreEpisode || 1;
             document.getElementById("animeSearch").value = evt.animeTitre || "";
         }
 
@@ -197,6 +204,7 @@
         document.getElementById("animeImageUrl").value = anime.images.jpg.image_url;
         document.getElementById("animeMalId").value = anime.mal_id;
         document.getElementById("animeSearch").value = anime.title;
+        document.getElementById("episodeMax").value = anime.episodes || 1;
         document.getElementById("suggestionsAnime").innerHTML = '';
     }
 
@@ -217,6 +225,8 @@
             evenement.animeSynopsis = document.getElementById("animeSynopsis").value;
             evenement.animeImageUrl = document.getElementById("animeImageUrl").value;
             evenement.episodeCourant = parseInt(document.getElementById("episodeCourant").value);
+            evenement.episodeMax = document.getElementById("episodeMax").value;
+            evenement.nombreEpisode = document.getElementById("nombreEpisode").value;
             evenement.animeMalId = document.getElementById("animeMalId").value;
         }
         evenement.description = document.getElementById("description").value;
