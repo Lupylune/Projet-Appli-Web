@@ -23,8 +23,7 @@
 
 <h1>Gestion du Bureau</h1>
 <form id="bureauForm">
-  <div id="membres-container"></div>
-  <button type="submit">Enregistrer le bureau</button>
+  <button id="bureau-form-button" type="submit">Enregistrer le bureau</button>
 </form>
 
 <h2>Trésorerie</h2>
@@ -70,8 +69,8 @@
     fetch("/api/logout", { method: "POST" }).then(() => location.reload());
   }
 
-  const membresContainer = document.getElementById('membres-container');
   const bureauForm = document.getElementById('bureauForm');
+  const bureauFormButton = document.getElementById("bureau-form-button");
   const transactionForm = document.getElementById('transactionForm');
   const listeTransactions = document.getElementById('listeTransactions');
   const soldeSpan = document.getElementById('solde');
@@ -85,51 +84,62 @@
     const membres = await membresRes.json();
     const bureau = await bureauRes.json();
 
-    membresContainer.innerHTML = "";
     roles.forEach(role => {
-      const div = document.createElement('div');
       const label = document.createElement('label');
       label.textContent = role + " : ";
+      label.htmlFor = role;
       const select = document.createElement('select');
+      select.classList.add('center-selected', 'left-options');
+      select.id = role;
       select.name = role;
 
       const emptyOption = document.createElement("option");
-      emptyOption.value = "";
       emptyOption.textContent = "-- Aucun --";
+      emptyOption.value=null;
       select.appendChild(emptyOption);
 
       membres.forEach(m => {
         const option = document.createElement("option");
         option.value = m.id;
         option.textContent = `${m.prenom} ${m.nom}`;
-        if (bureau[role] && bureau[role].id === m.id) {
-          option.selected = true;
-        }
+        bureau.forEach(b => {
+          if (b.poste === role && b.membre.id === m.id) {
+            option.selected = true;
+          }
+        });
         select.appendChild(option);
       });
 
-      div.appendChild(label);
-      div.appendChild(select);
-      membresContainer.appendChild(div);
+      bureauForm.insertBefore(label,bureauFormButton);
+      bureauForm.insertBefore(select,bureauFormButton);
     });
   }
 
   bureauForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const payload = {};
-    roles.forEach(role => {
-      const select = bureauForm.querySelector(`select[name="${role}"]`);
-      const id = select.value;
-      if (id) {
-        payload[role] = parseInt(id);
-      }
-    });
+    e.preventDefault()
 
-    await fetch('/api/bureau', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    const bureauRes = await fetch('/api/bureau');
+    const bureau = await bureauRes.json();
+
+    for (const role of roles) {
+      const select = document.getElementById(role);
+      const membreId = select.value;
+      if (!(membreId === "null")) {
+        const bureau = {membreId, role};
+        await fetch('/api/bureau/create_update', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(bureau)
+        });
+      } else {
+        for (const b of bureau) {
+          if (b.poste === role) {
+            await fetch(`/api/bureau/${b.id}`, {
+              method: 'DELETE'});
+          }
+        }
+      }
+    }
 
     alert("Bureau mis à jour !");
   });

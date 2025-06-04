@@ -46,6 +46,9 @@
                     membreId = membre;
                 }
             });
+        function logout() {
+            fetch("/api/logout", { method: "POST" }).then(() => location.reload());
+        }
         console.log(membreId);
         await fetch(`/api/inscriptions/membre/${membreId}`)
             .then(res => res.ok ? res.json() : Promise.reject("Erreur chargement"))

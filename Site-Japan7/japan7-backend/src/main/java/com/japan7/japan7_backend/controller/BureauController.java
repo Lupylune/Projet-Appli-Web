@@ -1,5 +1,6 @@
 package com.japan7.japan7_backend.controller;
 
+import com.japan7.japan7_backend.dto.BureauDTO;
 import com.japan7.japan7_backend.model.Bureau;
 import com.japan7.japan7_backend.model.Membre;
 import com.japan7.japan7_backend.repository.BureauRepository;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/bureau")
@@ -26,14 +28,20 @@ public class BureauController {
         return bureauRepository.findAll();
     }
 
-    @PostMapping
-    public ResponseEntity<?> create(@RequestBody Bureau bureau) {
-        Membre membre = membreRepository.findById(bureau.getMembre().getId()).orElse(null);
-        if (membre == null) {
-            return ResponseEntity.badRequest().body("Membre introuvable.");
-        }
+    @PostMapping("/create_update")
+    public ResponseEntity<?> createOrUpdateBureau(@RequestBody BureauDTO bureauDto) {
+        Optional<Bureau> optionalBureau = bureauRepository.findByPoste(bureauDto.getRole());
+
+        Bureau bureau = optionalBureau.orElse(new Bureau());
+        bureau.setPoste(bureauDto.getRole());
+
+        Membre membre = membreRepository.findById(bureauDto.getMembreId())
+                .orElseThrow(() -> new RuntimeException("Membre not found with id " + bureauDto.getMembreId()));
+
         bureau.setMembre(membre);
-        return ResponseEntity.ok(bureauRepository.save(bureau));
+
+        bureauRepository.save(bureau);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}")

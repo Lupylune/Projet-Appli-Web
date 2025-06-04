@@ -9,6 +9,7 @@ public class Bureau {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column
     private String poste;
 
     @ManyToOne

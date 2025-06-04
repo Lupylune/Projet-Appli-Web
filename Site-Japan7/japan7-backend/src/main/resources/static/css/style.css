@@ -361,3 +361,12 @@ form#form-commentaire textarea {
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     font-size: 1em;
 }
+
+
+select.center-selected {
+    text-align-last: center; /* Only affects the displayed (selected) item */
+}
+
+select.left-options option {
+    text-align: left;
+}
