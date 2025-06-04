@@ -31,6 +31,14 @@ public class RessourceController {
 
     @PostMapping
     public Ressource create(@RequestBody Ressource ressource) {
+        if (ressource.getEvenement() == null || ressource.getEvenement().getId() == null) {
+            throw new IllegalArgumentException("L'événement doit être spécifié avec un ID.");
+        }
+
+        var evenement = evenementRepository.findById(ressource.getEvenement().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Événement introuvable."));
+
+        ressource.setEvenement(evenement);
         return ressourceRepository.save(ressource);
     }
 
@@ -40,7 +48,13 @@ public class RessourceController {
         r.setNom(updated.getNom());
         r.setType(updated.getType());
         r.setQuantite(updated.getQuantite());
-        r.setEvenement(updated.getEvenement());
+
+        if (updated.getEvenement() != null && updated.getEvenement().getId() != null) {
+            var evt = evenementRepository.findById(updated.getEvenement().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Événement introuvable"));
+            r.setEvenement(evt);
+        }
+
         return ressourceRepository.save(r);
     }
 

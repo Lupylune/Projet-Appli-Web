@@ -53,6 +53,7 @@ public class Evenement {
     private List<Inscription> inscriptions = new ArrayList<>();
 
     @OneToMany(mappedBy = "evenement", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Ressource> ressources = new ArrayList<>();
 
     // Champs spécifiques pour les projections d'anime
